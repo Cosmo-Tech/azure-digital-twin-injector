@@ -1,0 +1,11 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "node",
+    "CSV_STORAGE_CONTAINER": "input-csv",
+    "JSON_STORAGE_QUEUE": "json-queue",
+    "DIGITAL_TWIN_URL": "<DIGITAL_TWIN_URL>",
+    "CSV_STORAGE_CONNECTION": "<STORAGE_CONNECTION_STRING>", 
+    "JSON_STORAGE_CONNECTION": "<STORAGE_CONNECTION_STRING>"
+  }
+}

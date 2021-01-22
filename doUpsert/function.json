@@ -1,0 +1,11 @@
+{
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "direction": "in",
+      "name": "jsonItem",
+      "queueName": "%JSON_STORAGE_QUEUE%",
+      "connection": "JSON_STORAGE_CONNECTION"
+    }
+  ]
+}

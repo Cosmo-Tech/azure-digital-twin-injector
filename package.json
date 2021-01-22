@@ -1,0 +1,17 @@
+{
+  "name": "@cosmotech/dt-injector",
+  "version": "0.0.1",
+  "description": "Data Injection service for Digital Twin",
+  "scripts": {
+    "test": "echo \"No tests yet...\""
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@azure/digital-twins-core": "^1.0.1",
+    "@azure/identity": "^1.2.2",
+    "@azure/storage-queue": "^12.3.0",
+    "@azure/storage-blob": "^12.4.0",
+    "csv": "^5.3.2"
+  }
+}
