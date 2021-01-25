@@ -15,8 +15,8 @@ update) twins and relations into the digital twin.
 
 The injector is triggered by uploading a CSV file to an azure storage
 container and expects the following columns for twins:
- - `\$metadata.\$model`: The model id of the twin,
- - `\$id`: The id of the twin,
+ - `$metadata.$model`: The model id of the twin,
+ - `$id`: The id of the twin,
  - one column for each property or telemetry, with complex properties
    flattened with dot-spearated headers.
 for instance given the following twin model:
@@ -51,7 +51,7 @@ for instance given the following twin model:
 }
 ```
 
-you may inject twins using the following CSV file:
+you may inject twins matching this model using the following CSV file:
 
 | `"$metadata.$model"`        | `"$id"`       | `"color"` | `"position.x"` | `"position.y"` |
 | ----------------------------- | -------------- | --------- | -------------- | -------------- |
@@ -62,11 +62,9 @@ To insert relation `dt-injestor` expects the folowing columns:
 | `"$sourceId"`        | `"$targetId"`       | `"$relationshipId"` | `"$relationshipName"` | `"property1"` | `"property..."` |
 | ----------------------------- | -------------- | --------- | -------------- | ---- | --- |
 
-
-
 # Configuration
 
-dt-injector expects the following settings:
+dt-injector canbe configured using the following settings:
 
 | **Application settings**  |                                                                                |
 | ----------------------- | ------------------------------------------------------------------------------ |
@@ -77,7 +75,11 @@ dt-injector expects the following settings:
 | DIGITAL_TWIN_URL | https://digitaltwin24876.api.weu.digitaltwins.azure.net                        |
 
 
-an example `local.settings.json` is provided in the repository. In addition, The Function App Managed idendity must be an `Azure Digital Twins Data Owner` in the target digital twin.
+an example `local.settings.json` is provided in the repository. In addition,
+The Function App [managed
+idendity](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity?tabs=javascript)
+must be assigned the role of `Azure Digital Twins Data Owner` in the target
+digital twin.
 
 # Known Limitations
 
