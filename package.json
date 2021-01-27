@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Data Injection service for Digital Twin",
   "scripts": {
-    "test": "echo \"No tests yet...\""
+    "test": "jest"
   },
   "author": "",
   "license": "ISC",

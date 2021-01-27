@@ -1,9 +1,8 @@
-const { QueueServiceClient } = require("@azure/storage-queue");
+const { QueueClient } = require('@azure/storage-queue');
 const parseCSV = require('csv-parse/lib/sync');
 
-module.exports = async function (context, csvBlob, jsonQueue) {
-    const queueServiceClient = new QueueServiceClient.fromConnectionString(process.env.JSON_STORAGE_CONNECTION);
-    const queueClient = queueServiceClient.getQueueClient(process.env.JSON_STORAGE_QUEUE);
+module.exports = async function (context, csvBlob) {
+    const queueClient = new QueueClient(process.env.JSON_STORAGE_CONNECTION, process.env.JSON_STORAGE_QUEUE);
     queueClient.createIfNotExists();
     const records = parseCSV(csvBlob,
         { columns: true, skip_empty_lines: true, cast: true });
