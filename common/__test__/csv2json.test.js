@@ -1,4 +1,4 @@
-const csv2json = require('../index');
+const {csv2json} = require('../csv2json');
 const { QueueClient }= require('@azure/storage-queue');
 
 process.env.JSON_STORAGE_CONNECTION = '';
@@ -22,7 +22,7 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json({}, testValue);
+        await csv2json(testValue);
         expect(mockMessages.length).toBe(1);
         expect(mockMessages[0].$id).toBe('instanceId');
         expect(mockMessages[0].$content.$metadata.$model).toBe('modelName');
@@ -41,7 +41,7 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json({}, testValue);
+        await csv2json(testValue);
         expect(mockMessages.length).toBe(2);
         expect(mockMessages[0].$id).toBe('instanceOne');
         expect(mockMessages[0].$content.$metadata.$model).toBe('modelName');
@@ -62,7 +62,7 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json({}, testValue);
+        await csv2json(testValue);
         expect(mockMessages.length).toBe(1);
         expect(mockMessages[0].$content.answer).toBe(42);
     });
@@ -80,7 +80,7 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json({}, testValue);
+        await csv2json(testValue);
         expect(mockMessages.length).toBe(1);
         expect(mockMessages[0].$content.e).toBe(2.71828);
     });
@@ -98,7 +98,7 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json({}, testValue);
+        await csv2json(testValue);
         expect(mockMessages.length).toBe(1);
         expect(mockMessages[0].$content.eeny.meenie.miney.moe).toBe('catch a tiger by the toe');
     });
