@@ -5,7 +5,12 @@ module.exports = async function (context, csvBlob) {
     const queueClient = new QueueClient(process.env.JSON_STORAGE_CONNECTION, process.env.JSON_STORAGE_QUEUE);
     queueClient.createIfNotExists();
     const records = parseCSV(csvBlob,
-        { columns: true, skip_empty_lines: true, cast: true });
+        { columns: true,
+          skip_empty_lines: true,
+          trim: true,
+          castDate: true,
+          cast: true
+        });
     records.forEach(row => {
         var id = "";
         var relationshipId = "";
