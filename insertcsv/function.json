@@ -1,0 +1,26 @@
+{
+  "bindings": [
+    {
+      "authLevel": "function",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": [
+        "get",
+        "post"
+      ]
+    },
+    {
+      "name": "csvdata",
+      "type": "blob",
+      "direction": "in",
+      "path": "%CSV_STORAGE_CONTAINER%/{filename}",
+      "connection": "CSV_STORAGE_CONNECTION"
+    },
+    {
+      "type": "http",
+      "direction": "out",
+      "name": "res"
+    }
+  ]
+}

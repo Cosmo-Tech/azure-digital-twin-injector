@@ -3,24 +3,26 @@ const { DefaultAzureCredential } = require("@azure/identity");
 
 module.exports = async function (context, jsonItem) {
     const digitalTwin = new DigitalTwinsClient(process.env.DIGITAL_TWIN_URL, new DefaultAzureCredential());
-    jsonContent = JSON.stringify(jsonItem.$content);
+    const jsonString = JSON.stringify(jsonItem);
     if ("$relationshipId" in jsonItem) {
             setTimeout(() => {
-                digitalTwin.upsertRelationship(jsonItem.$id, jsonItem.$relationshipId, jsonItem.$content)
+                digitalTwin.upsertRelationship(jsonItem.$sourceId, jsonItem.$relationshipId, jsonItem)
                     .catch(e => {
-                        console.log(`relationship ${jsonItem.$relationshipId} on source ${jsonItem.$id} insertion failed: ${e}`);
-                        console.log(`failed relationship: ${jsonContent}`);
+                        console.log(`relationship ${jsonItem.$relationshipId} on source ${jsonItem.$sourceId} insertion failed: ${e}`);
+                        console.log(`failed relationship: ${jsonString}`);
                     });
 
             }, 100).ref();
-    } else {
+    } else if ("$id" in jsonItem) {
         // twin
         setTimeout(() => {
-            digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonContent)
+            digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
                 .catch(e => {
                     console.log(`twin ${jsonItem.$id} insertion failed: ${e}`);
-                    console.log(`failed twin: ${jsonContent}`);
+                    console.log(`failed twin: ${jsonString}`);
                 });
         }, 20).ref();
-    }
+    } else {
+        context.log(`unrecognised message format: ${jsonString}`);
+    } 
 };

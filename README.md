@@ -4,12 +4,13 @@ dt-injector is an Azure Function App to inject twins and relations into an
 Azure Digital Twin instance from CSV files. It simplifies feeding data into a
 digital twin for instance as a last step from an ETL.
 
-The process is split across two function. The first function, `csv2json` is
-triggered upon new csv file in a blob storage container. `csv2json` read the
-input csv and generates json strings suitable for ingestion by Azure Digital
-Twin and posts them to an Azure Queue Storage. The second function,
-`doUpsert`, processes json items from the queue and upserts (i.e. insert or
-update) twins and relations into the digital twin.
+The process is split across four functions. The first function, `csv2json`
+reads the input csv and generates a json strings suitable for ingestion by
+Azure Digital Twin for each line of the input file and posts them to an Azure
+Queue Storage. The second function, `doUpsert`, processes json items from the
+queue and upserts (i.e. insert or update) twins and relations into the
+digital twin. The last two function, `blobwatcher` and `insertcsv` are
+frontends for csv2json (respectively blob triggered and http triggered).
 
 # CSV input format
 
@@ -53,26 +54,28 @@ for instance given the following twin model:
 
 you may inject twins matching this model using the following CSV file:
 
-| `"$metadata.$model"`        | `"$id"`       | `"color"` | `"position.x"` | `"position.y"` |
+| `"$metadata.$model"`          | `"$id"`        | `"color"` | `"position.x"` | `"position.y"` |
 | ----------------------------- | -------------- | --------- | -------------- | -------------- |
 | `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   | `25.3`         | `42.0`         |
 
 To insert relation `dt-injestor` expects the folowing columns:
 
-| `"$sourceId"`        | `"$targetId"`       | `"$relationshipId"` | `"$relationshipName"` | `"property1"` | `"property..."` |
-| ----------------------------- | -------------- | --------- | -------------- | ---- | --- |
+| `"$sourceId"` | `"$targetId"` | `"$relationshipId"` | `"$relationshipName"` | `"property1"` | `"property..."` |
+| ------------- | ------------- | ------------------- | --------------------- | ------------- | --------------- |
 
 # Configuration
 
 dt-injector canbe configured using the following settings:
 
-| **Application settings**  |                                                                                |
-| ----------------------- | ------------------------------------------------------------------------------ |
-| CSV_STORAGE_CONNECTION  | shared access key for the storage account hosting the input csv file container |
-| CSV_STORAGE_CONTAINER   | name of the container to monitor for new csv                                   |
-| JSON_STORAGE_CONNECTION | shared access key for the storage account hosting the input csv file container |
-| JSON_STORAGE_QUEUE      | name of the queue linking the two functions                                    |
-| DIGITAL_TWIN_URL | https://digitaltwin24876.api.weu.digitaltwins.azure.net                        |
+| **Application settings**       |                                                                                                     |
+| ------------------------------ | --------------------------------------------------------------------------------------------------- |
+| WATCHED_CSV_STORAGE_CONNECTION | shared access key for the storage account beingwatched for new csv files                            |
+| WATCHED_CSV_STORAGE_CONTAINER  | name of the container to monitor for new csv                                                        |
+| CSV_STORAGE_CONNECTION         | shared access key for the storage account hosting the input csv file container for the http trigger |
+| CSV_STORAGE_CONTAINER          | name of the container where new csv are read by the http trigger                                    |
+| JSON_STORAGE_CONNECTION        | shared access key for the storage account hosting the input csv file container                      |
+| JSON_STORAGE_QUEUE             | name of the queue linking the two functions                                                         |
+| DIGITAL_TWIN_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
 
 
 an example `local.settings.json` is provided in the repository. In addition,
