@@ -13,6 +13,7 @@ describe('csv2json', () => {
         testValue = '"$metadata.$model","$id"\n'
             +       '"modelName","instanceId"';
         mockMessages = [];
+        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -22,10 +23,10 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json(testValue);
+        await csv2json(mockContext, testValue);
         expect(mockMessages.length).toBe(1);
         expect(mockMessages[0].$id).toBe('instanceId');
-        expect(mockMessages[0].$content.$metadata.$model).toBe('modelName');
+        expect(mockMessages[0].$metadata.$model).toBe('modelName');
     });
     it('creates one twin per row', async () => {
         testValue = '"$metadata.$model","$id"\n'
@@ -41,12 +42,12 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json(testValue);
+        await csv2json(mockContext, testValue);
         expect(mockMessages.length).toBe(2);
         expect(mockMessages[0].$id).toBe('instanceOne');
-        expect(mockMessages[0].$content.$metadata.$model).toBe('modelName');
+        expect(mockMessages[0].$metadata.$model).toBe('modelName');
         expect(mockMessages[1].$id).toBe('instanceTwo');
-        expect(mockMessages[1].$content.$metadata.$model).toBe('modelName');
+        expect(mockMessages[1].$metadata.$model).toBe('modelName');
     });
 
     it('handles integer properties', async () => {
@@ -62,9 +63,9 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json(testValue);
+        await csv2json(mockContext, testValue);
         expect(mockMessages.length).toBe(1);
-        expect(mockMessages[0].$content.answer).toBe(42);
+        expect(mockMessages[0].answer).toBe(42);
     });
 
     it('handles double properties', async () => {
@@ -80,9 +81,9 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json(testValue);
+        await csv2json(mockContext, testValue);
         expect(mockMessages.length).toBe(1);
-        expect(mockMessages[0].$content.e).toBe(2.71828);
+        expect(mockMessages[0].e).toBe(2.71828);
     });
 
     it('handles object properties', async () => {
@@ -98,8 +99,8 @@ describe('csv2json', () => {
                 }),
             }
         });
-        await csv2json(testValue);
+        await csv2json(mockContext, testValue);
         expect(mockMessages.length).toBe(1);
-        expect(mockMessages[0].$content.eeny.meenie.miney.moe).toBe('catch a tiger by the toe');
+        expect(mockMessages[0].eeny.meenie.miney.moe).toBe('catch a tiger by the toe');
     });
 });

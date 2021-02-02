@@ -1,7 +1,7 @@
 const { QueueClient }= require('@azure/storage-queue');
 const parseCSV = require('csv-parse/lib/sync');
 
-module.exports.csv2json = async function (context, csvData) {
+module.exports.csv2json = async function (/*context*/ _, csvData) {
     const queueClient = new QueueClient(process.env.JSON_STORAGE_CONNECTION, process.env.JSON_STORAGE_QUEUE);
     queueClient.createIfNotExists();
     const records = parseCSV(csvData,
@@ -11,8 +11,6 @@ module.exports.csv2json = async function (context, csvData) {
           cast: true
         });
     records.forEach(row => {
-        var id = "";
-        var relationshipId = "";
         var content = {};
         for (var key in row) {
             key.split('.').reduce((acc, e, i, arr) => {
