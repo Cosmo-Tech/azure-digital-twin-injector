@@ -69,11 +69,11 @@ dt-injector canbe configured using the following settings:
 
 | **Application settings**       |                                                                                                     |
 | ------------------------------ | --------------------------------------------------------------------------------------------------- |
-| WATCHED_CSV_STORAGE_CONNECTION | shared access key for the storage account beingwatched for new csv files                            |
+| WATCHED_CSV_STORAGE_CONNECTION | connection string for the storage account being watched for new csv files                           |
 | WATCHED_CSV_STORAGE_CONTAINER  | name of the container to monitor for new csv                                                        |
-| CSV_STORAGE_CONNECTION         | shared access key for the storage account hosting the input csv file container for the http trigger |
+| CSV_STORAGE_CONNECTION         | connection string for the storage account hosting the input csv file container for the http trigger |
 | CSV_STORAGE_CONTAINER          | name of the container where new csv are read by the http trigger                                    |
-| JSON_STORAGE_CONNECTION        | shared access key for the storage account hosting the input csv file container                      |
+| JSON_STORAGE_CONNECTION        | connection string for the storage account hosting the input csv file container                      |
 | JSON_STORAGE_QUEUE             | name of the queue linking the two functions                                                         |
 | DIGITAL_TWIN_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
 
