@@ -109,8 +109,8 @@ describe('csv2json', () => {
     });
  
     it('handles simple relationships', async () => {
-        testValue = '"$sourceId","$targetId","$relationshipId", "$relationshipName"\n'
-            +       '"sourceId","targetId","sourceId-relation-targetId", "relationName"';
+        testValue = '"$sourceId","$targetId","$relationshipId","$relationshipName"\n'
+            +       '"sourceId","targetId","sourceId-relation-targetId","relationName"';
         mockMessages = [];
         mockContext = {};
         QueueClient.mockImplementation((_, __) => {
@@ -131,8 +131,8 @@ describe('csv2json', () => {
     })
 
     it('handles relationships with properties', async () => {
-        testValue = '"$sourceId","$targetId","$relationshipId", "$relationshipName", "property1", "nested.property"\n'
-            +       '"sourceId","targetId","sourceId-relation-targetId", "relationName", 3.14159, "value"';
+        testValue = '"$sourceId","$targetId","$relationshipId","$relationshipName","property1","nested.property"\n'
+            +       '"sourceId","targetId","sourceId-relation-targetId","relationName",3.14159,"value"';
         mockMessages = [];
         mockContext = {};
         QueueClient.mockImplementation((_, __) => {
@@ -151,9 +151,9 @@ describe('csv2json', () => {
     })
 
     it('creates one relationship per row', async () => {
-        testValue = '"$sourceId","$targetId","$relationshipId", "$relationshipName", "property1", "nested.property"\n'
-            +       '"sourceId","targetId","sourceId-relation-targetId", "relationName", 3.14159, "value"\n'
-            +       '"sourceId2","targetId2","sourceId-relation-targetId2", "relationName2", 2.71828, "value2"';
+        testValue = '"$sourceId","$targetId","$relationshipId","$relationshipName","property1","nested.property"\n'
+            +       '"sourceId","targetId","sourceId-relation-targetId","relationName",3.14159,"value"\n'
+            +       '"sourceId2","targetId2","sourceId-relation-targetId2","relationName2", 2.71828,"value2"';
         mockMessages = [];
         mockContext = {};
         QueueClient.mockImplementation((_, __) => {

@@ -5,13 +5,13 @@
   "scripts": {
     "test": "jest"
   },
-  "author": "",
+  "author": "Cosmo Tech",
   "license": "ISC",
   "dependencies": {
     "@azure/digital-twins-core": "^1.0.1",
     "@azure/identity": "^1.2.2",
     "@azure/storage-queue": "^12.3.0",
-    "csv": "^5.3.2"
+    "papaparse": "^5.3.0"
   },
   "devDependencies": {
     "jest": "^26.6.3"
