@@ -1,0 +1,165 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {},
+    "variables": {},
+    "functions": [
+        {
+            "namespace": "csm",
+            "members": {
+                "addSuffix": {
+                    "parameters": [
+                        {
+                            "name": "prefix",
+                            "type": "string"
+                        }
+                    ],
+                    "output": {
+                        "type": "string",
+                        "value": "[concat(toLower(parameters('prefix')), take(uniqueString(resourceGroup().id), 8))]"
+                    }
+                }
+            }
+        }
+    ],
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[csm.addSuffix('storage')]",
+            "location": "[resourceGroup().location]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "properties": {
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": true,
+                "accessTier": "Hot"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/queueServices/queues",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(csm.addSuffix('storage'), '/default/json-queue')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', csm.addSuffix('storage'))]"
+            ],
+            "properties": {
+                "metadata": {}
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(csm.addSuffix('storage'), '/default/input-csv')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', csm.addSuffix('storage'))]"
+            ],
+            "properties": {
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+            "apiVersion": "2020-08-01-preview",
+            "name": "[concat(csm.addSuffix('storage'), '/default/automatic-import')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', csm.addSuffix('storage'))]"
+            ],
+            "properties": {
+                "defaultEncryptionScope": "$account-encryption-key",
+                "denyEncryptionScopeOverride": false,
+                "publicAccess": "None"
+            }
+        },
+        {
+            "type": "Microsoft.Web/sites",
+            "apiVersion": "2020-06-01",
+            "name": "[csm.addSuffix('functionapp')]",
+            "location": "[resourceGroup().location]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', csm.addSuffix('storage'))]"
+            ],
+            "kind": "functionapp",
+            "identity": {
+                "type": "SystemAssigned"
+            },
+            "properties": {
+                "siteConfig": {
+                    "appSettings": [
+                        {
+                            "name": "AzureWebJobsStorage",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', csm.addSuffix('storage'), ';AccountKey=', listKeys(csm.addSuffix('storage'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', csm.addSuffix('storage'), ';AccountKey=', listKeys(csm.addSuffix('storage'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WEBSITE_CONTENTSHARE",
+                            "value": "[concat(csm.addSuffix('functionapp'), take(uniqueString('functionapp'), 4))]"
+                        },
+                        {
+                            "name": "FUNCTIONS_WORKER_RUNTIME",
+                            "value": "node"
+                        },
+                        {
+                            "name": "WEBSITE_NODE_DEFAULT_VERSION",
+                            "value": "10.14.1"
+                        },
+                        {
+                            "name": "FUNCTIONS_EXTENSION_VERSION",
+                            "value": "~3"
+                        },
+                        {
+                            "name": "WATCHED_CSV_STORAGE_CONNECTION",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', csm.addSuffix('storage'), ';AccountKey=', listKeys(csm.addSuffix('storage'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "WATCHED_CSV_STORAGE_CONTAINER",
+                            "value": "automatic-import"
+                        },
+                        {
+                            "name": "CSV_STORAGE_CONNECTION",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', csm.addSuffix('storage'), ';AccountKey=', listKeys(csm.addSuffix('storage'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "CSV_STORAGE_CONTAINER",
+                            "value": "input-csv"
+                        },
+                        {
+                            "name": "JSON_STORAGE_CONNECTION",
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', csm.addSuffix('storage'), ';AccountKey=', listKeys(csm.addSuffix('storage'),'2019-06-01').keys[0].value)]"
+                        },
+                        {
+                            "name": "JSON_STORAGE_QUEUE",
+                            "value": "json-queue"
+                        }
+                    ]
+                }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2018-11-01",
+                    "name": "web",
+                    "type": "sourcecontrols",
+                    "location": "[resourceGroup().location]",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/sites', csm.addSuffix('functionapp'))]"
+                    ],
+                    "properties": {
+                        "repoUrl": "https://github.com/Cosmo-Tech/azure-digital-twin-injector.git",
+                        "branch": "main",
+                        "publishRunbook": true,
+                        "IsManualIntegration": true
+                    }
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}
