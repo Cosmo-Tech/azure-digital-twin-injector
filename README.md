@@ -1,4 +1,4 @@
-# dt-injector - Digital Twin Injection Pipeline
+# dt-injector - Digital Twin CSV Injection
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FCosmo-Tech%2Fazure-digital-twin-injector%2Fdeploy%2Fdeploy%2Finjector.json)
 
@@ -85,6 +85,11 @@ The Function App [managed
 idendity](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity?tabs=javascript)
 must be assigned the role of `Azure Digital Twins Data Owner` in the target
 digital twin.
+
+# Example Azure Data Factory to Azure Digital Twin pipeline
+The following template create an example app that uses the CSV injector to link Azure data factory to Azure digital twins.
+
+[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FCosmo-Tech%2Fazure-digital-twin-injector%2Fdeploy%2Fexample%2Fdeploy.json)
 
 # Known Limitations
 

@@ -1,0 +1,98 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "dataFactoryName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the Data Factory. leave empty for a default name."
+            }
+        },
+        "digitalTwinName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the Digital Twins Instances. leave empty for a default name."
+            }
+        },
+        "functionAppName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of the injector Function App. leave empty for a default name."
+            }
+        }
+    },
+    "variables": {
+        "dtName" : "[if(empty(parameters('digitalTwinName')),concat('digitaltwin', take(uniqueString(resourceGroup().id),8)),parameters('digitalTwinName'))]" ,
+        "dfName" : "[if(empty(parameters('dataFactoryName')),concat('datafactory', take(uniqueString(resourceGroup().id),8)),parameters('dataFactoryName'))]" ,
+        "faName" : "[if(empty(parameters('functionAppName')),concat('functionapp', take(uniqueString(resourceGroup().id),8)),parameters('functionAppName'))]" 
+    },
+    "functions": [],
+    "resources": [
+        {
+            "type": "Microsoft.DigitalTwins/digitalTwinsInstances",
+            "apiVersion": "2020-12-01",
+            "name": "[variables('dtName')]",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "privateEndpointConnections": [],
+                "publicNetworkAccess": "Enabled"
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2020-10-01",
+            "name": "injectorDeployment",
+            "properties": {
+                "mode": "Incremental",
+                "templateLink": {
+                    "relativePath": "../deploy/injector.json"
+                },
+                "parameters": {
+                    "digitalTwinsInstancesName": {
+                        "value": "[variables('dtName')]"
+                    },
+                    "functionAppName": {
+                        "value": "[variables('faName')]"
+                    }
+                }
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.DigitalTwins/digitalTwinsInstances', variables('dtName'))]"
+            ]
+        },
+        {
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "name": "[variables('dfName')]",
+            "location": "[resourceGroup().location]",
+            "resources": [
+                {
+                    "type": "linkedservices",
+                    "apiVersion": "2018-06-01",
+                    "name": "[concat(variables('dfName'),'-',variables('faName'))]",
+                    "properties": {
+                        "type": "AzureFunction",
+                        "typeProperties": {
+                            "functionAppUrl": {
+                                "type" : "string",
+                                "value": "[reference('injectorDeployment').outputs.functionAppUrl.value]"
+                            },
+                            "functionKey": {
+                                "type": "SecureString",
+                                "value": "[reference('injectorDeployment').outputs.functionAppKey.value]"
+                            }
+                        }
+                    },
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Resources/deployments', 'injectorDeployment')]",
+                        "[resourceId('Microsoft.DataFactory/factories', variables('dfName'))]"
+                    ]
+                }
+            ]
+        }
+    ],
+    "outputs": {}
+}
