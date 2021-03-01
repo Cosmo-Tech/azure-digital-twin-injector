@@ -65,7 +65,7 @@
         },
         {
             "type": "Microsoft.DataFactory/factories",
-            "apiVersion": "2020-10-01",
+            "apiVersion": "2018-06-01",
             "name": "[variables('dfName')]",
             "location": "[resourceGroup().location]",
             "resources": [
