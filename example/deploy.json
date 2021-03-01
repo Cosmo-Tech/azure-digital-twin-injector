@@ -48,7 +48,7 @@
             "properties": {
                 "mode": "Incremental",
                 "templateLink": {
-                    "relativePath": "../deploy/injector.json"
+                    "uri": "https://raw.githubusercontent.com/Cosmo-Tech/azure-digital-twin-injector/deploy/deploy/injector.json"
                 },
                 "parameters": {
                     "digitalTwinsInstancesName": {
