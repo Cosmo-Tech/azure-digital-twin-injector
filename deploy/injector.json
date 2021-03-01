@@ -186,7 +186,7 @@
             "value": "[concat('https://', variables('faName'), '.azurewebsites.net')]"
         },
         "insertCsvSecret": {
-            "type": "SecureString",
+            "type": "string",
             "value": "[listSecrets(resourceId('Microsoft.Web/sites/functions', variables('faName'), 'insertcsv'),'2020-06-01').key]"
         },
         "automticInsertUrl": {
@@ -194,7 +194,7 @@
             "value": "[concat('https://', variables('saName'), '.blob.core.windows.net/automatic-import')]"
         },
         "automticInsertKey": {
-            "type": "SecureString",
+            "type": "string",
             "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('saName')), '2019-04-01').keys[0].value]"
         }
     }
