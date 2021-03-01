@@ -78,11 +78,11 @@
                         "typeProperties": {
                             "functionAppUrl": {
                                 "type" : "string",
-                                "value": "[reference('injectorDeployment').outputs.functionAppUrl.value]"
+                                "value": "[reference('injectorDeployment').outputs.insertCsvUrl.value]"
                             },
                             "functionKey": {
                                 "type": "SecureString",
-                                "value": "[reference('injectorDeployment').outputs.functionAppKey.value]"
+                                "value": "[reference('injectorDeployment').outputs.insertCsvSecret.value]"
                             }
                         }
                     },
