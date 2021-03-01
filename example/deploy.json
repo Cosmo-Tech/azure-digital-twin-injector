@@ -76,10 +76,7 @@
                     "properties": {
                         "type": "AzureFunction",
                         "typeProperties": {
-                            "functionAppUrl": {
-                                "type" : "string",
-                                "value": "[reference('injectorDeployment').outputs.insertCsvUrl.value]"
-                            },
+                            "functionAppUrl": "[reference('injectorDeployment').outputs.insertCsvUrl.value]",
                             "functionKey": {
                                 "type": "SecureString",
                                 "value": "[reference('injectorDeployment').outputs.insertCsvSecret.value]"
