@@ -32,12 +32,25 @@
     "functions": [],
     "resources": [
         {
+            "type": "Microsoft.Storage/storageAccounts",
+            "apiVersion": "2019-06-01",
+            "name": "[concat('input'), take(uniqueString(resourceGroup().id),8)]",
+            "location": "[parameters('location')]",
+            "sku": {
+                "name": "Standard_LRS",
+                "tier": "Standard"
+            },
+            "kind": "StorageV2",
+            "resources": {
+                
+            }
+        },
+        {
             "type": "Microsoft.DigitalTwins/digitalTwinsInstances",
             "apiVersion": "2020-12-01",
             "name": "[variables('dtName')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "properties": {
-                "privateEndpointConnections": [],
                 "publicNetworkAccess": "Enabled"
             }
         },
@@ -67,7 +80,7 @@
             "type": "Microsoft.DataFactory/factories",
             "apiVersion": "2018-06-01",
             "name": "[variables('dfName')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "resources": [
                 {
                     "type": "linkedservices",

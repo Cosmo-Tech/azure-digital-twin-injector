@@ -27,7 +27,7 @@
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2020-08-01-preview",
             "name": "[variables('saName')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "sku": {
                 "name": "Standard_LRS",
                 "tier": "Standard"
@@ -46,9 +46,6 @@
                     "dependsOn": [
 "[resourceId('Microsoft.Storage/storageAccounts',variables('saName'))]"
                     ],
-                    "properties": {
-                        "metadata": {}
-                    }
                 },
                 {
                     "type": "blobServices/containers",
@@ -82,7 +79,7 @@
             "type": "Microsoft.Web/sites",
             "apiVersion": "2020-10-01",
             "name": "[variables('faName')]",
-            "location": "[resourceGroup().location]",
+            "location": "[parameters('location')]",
             "dependsOn": [
                 "[resourceId('Microsoft.Storage/storageAccounts', variables('saName'))]"
             ],
@@ -153,7 +150,7 @@
                     "apiVersion": "2018-11-01",
                     "name": "web",
                     "type": "sourcecontrols",
-                    "location": "[resourceGroup().location]",
+                    "location": "[parameters('location')]",
                     "dependsOn": [
                         "[resourceId('Microsoft.Web/sites', variables('faName'))]"
                     ],
