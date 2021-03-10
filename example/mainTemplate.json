@@ -13,14 +13,13 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of the Data Factory. leave empty for a default name."
-            }
+                "description": "Name of an existing Data Factory in the resource group. Leave empty for creating one."}
         },
         "digitalTwinName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of the Digital Twins Instances. leave empty for a default name."
+                "description": "Name of an existing Digital Twins Instances in the resource group. Leave empty for creating one."
             }
         },
         "functionAppName": {
@@ -32,9 +31,9 @@
         }
     },
     "variables": {
-        "dtName" : "[if(empty(parameters('digitalTwinName')),concat('digitaltwin', take(uniqueString(resourceGroup().id),8)),parameters('digitalTwinName'))]" ,
-        "dfName" : "[if(empty(parameters('dataFactoryName')),concat('datafactory', take(uniqueString(resourceGroup().id),8)),parameters('dataFactoryName'))]" ,
-        "faName" : "[if(empty(parameters('functionAppName')),concat('functionapp', take(uniqueString(resourceGroup().id),8)),parameters('functionAppName'))]" 
+        "dtName": "[if(empty(parameters('digitalTwinName')),concat('digitaltwin', take(uniqueString(resourceGroup().id),8)),parameters('digitalTwinName'))]",
+        "dfName": "[if(empty(parameters('dataFactoryName')),concat('datafactory', take(uniqueString(resourceGroup().id),8)),parameters('dataFactoryName'))]",
+        "faName": "[if(empty(parameters('functionAppName')),concat('functionapp', take(uniqueString(resourceGroup().id),8)),parameters('functionAppName'))]"
     },
     "functions": [],
     "resources": [
@@ -47,10 +46,7 @@
                 "name": "Standard_LRS",
                 "tier": "Standard"
             },
-            "kind": "StorageV2",
-            "resources": {
-                
-            }
+            "kind": "StorageV2"
         },
         {
             "type": "Microsoft.DigitalTwins/digitalTwinsInstances",
@@ -62,17 +58,29 @@
             }
         },
         {
+            "type": "Microsoft.DataFactory/factories",
+            "apiVersion": "2018-06-01",
+            "name": "[variables('dfName')]",
+            "location": "[parameters('location')]"
+        },
+        {
             "type": "Microsoft.Resources/deployments",
+            "name": "injector-deployment",
             "apiVersion": "2020-10-01",
-            "name": "injectorDeployment",
             "properties": {
-                "mode": "Incremental",
+                "mode": "incremental",
                 "templateLink": {
                     "uri": "https://raw.githubusercontent.com/Cosmo-Tech/azure-digital-twin-injector/deploy/deploy/injector.json"
                 },
                 "parameters": {
+                    "location": {
+                        "value": "[parameters('location')]"
+                    },
                     "digitalTwinsInstancesName": {
                         "value": "[variables('dtName')]"
+                    },
+                    "dataFactoryName": {
+                        "value": "[variables('dfName')]"
                     },
                     "functionAppName": {
                         "value": "[variables('faName')]"
@@ -80,28 +88,7 @@
                 }
             },
             "dependsOn": [
-                "[resourceId('Microsoft.DigitalTwins/digitalTwinsInstances', variables('dtName'))]"
-            ]
-        },
-        {
-            "type": "Microsoft.Resources/deployments",
-            "apiVersion": "2020-10-01",
-            "name": "injectorDeployment",
-            "properties": {
-                "mode": "Incremental",
-                "templateLink": {
-                    "uri": "https://raw.githubusercontent.com/Cosmo-Tech/azure-digital-twin-injector/deploy/example/deployDataFactory.json"
-                },
-                "parameters": {
-                    "digitalTwinsInstancesName": {
-                        "value": "[variables('dtName')]"
-                    },
-                    "functionAppName": {
-                        "value": "[variables('faName')]"
-                    }
-                }
-            },
-            "dependsOn": [
+                "[resourceId('Microsoft.DataFactory/factories', variables('dfName'))]",
                 "[resourceId('Microsoft.DigitalTwins/digitalTwinsInstances', variables('dtName'))]"
             ]
         }

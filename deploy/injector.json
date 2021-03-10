@@ -2,11 +2,24 @@
     "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
     "contentVersion": "1.0.0.0",
     "parameters": {
+        "location": {
+            "type": "string",
+            "metadata": {
+                "description": "location for resource created."
+            }
+        },
         "digitalTwinsInstancesName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of an existing digital Twins instances."
+                "description": "Name of an existing digital Twins instances in the resource group."
+            }
+        },
+        "dataFactoryName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Name of an existing data factory instance name in the resource group."
             }
         },
         "functionAppName": {
@@ -44,8 +57,8 @@
                     "apiVersion": "2020-08-01-preview",
                     "name": "default/json-queue",
                     "dependsOn": [
-"[resourceId('Microsoft.Storage/storageAccounts',variables('saName'))]"
-                    ],
+                        "[resourceId('Microsoft.Storage/storageAccounts',variables('saName'))]"
+                    ]
                 },
                 {
                     "type": "blobServices/containers",
@@ -81,7 +94,9 @@
             "name": "[variables('faName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts', variables('saName'))]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('saName'), 'default', 'input-csv')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('saName'), 'default', 'automatic-import')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', variables('saName'), 'default', 'json-queue')]"
             ],
             "kind": "functionapp",
             "identity": {
@@ -164,35 +179,38 @@
             ]
         },
         {
-            "type": "Microsoft.DigitalTwins/digitalTwinsInstances/providers/roleAssignments",
-            "apiVersion": "2018-09-01-preview",
-            "name": "[concat(parameters('digitalTwinsInstancesName') , '/Microsoft.Authorization/', guid(subscription().subscriptionId, variables('faName'), 'DigitalTwinsOwner', parameters('digitalTwinsInstancesName')))]",
+            "condition": "[not(empty(parameters('digitalTwinsInstancesName')))]",
+            "type": "Microsoft.Authorization/roleAssignments",
+            "apiVersion": "2018-01-01-preview",
+            "name": "[guid(uniqueString(variables('faName'), 'Azure Digital Twins Data Owner', parameters('digitalTwinsInstancesName')))]",
+            "scope": "[concat('Microsoft.DigitalTwins/digitalTwinsInstances/', parameters('digitalTwinsInstancesName'))]",
+            "properties": {
+                "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'bcd981a7-7f74-457b-83e1-cceb9e632ffe')]",
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('faName')), '2020-10-01', 'Full').identity.principalId]"
+            },
             "dependsOn": [
                 "[resourceId('Microsoft.Web/sites', variables('faName'))]"
-            ],
+            ]
+        },
+        {
+            "condition": "[not(empty(parameters('dataFactoryName')))]",
+            "type": "Microsoft.DataFactory/factories/linkedServices",
+            "apiVersion": "2018-06-01",
+            "name": "[concat(parameters('dataFactoryName'),'/',variables('faName'))]",
             "properties": {
-                "roleDefinitionId": "[resourceId('Microsoft.Authorization/roleDefinitions', 'bcd981a7-7f74-457b-83e1-cceb9e632ffe')]",
-                "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('faName')), '2020-10-01', 'Full').identity.principalId]",
-                "principalType": "ServicePrincipal"
+                "type": "AzureFunction",
+                "typeProperties": {
+                    "functionAppUrl": "[concat('https://', variables('faName'), '.azurewebsites.net')]",
+                    "functionKey": {
+                        "type": "SecureString",
+                        "value": "[listKeys(concat(resourceId('Microsoft.Web/sites/', variables('faName')), '/host/default'), '2020-12-01').functionKeys.default]"
+                    }
+                },
+                "dependsOn": [
+                    "[resourceId('Microsoft.Web/sites', variables('faName'))]"
+                ]
             }
         }
     ],
-    "outputs": {
-        "insertCsvUrl": {
-            "type": "string",
-            "value": "[concat('https://', variables('faName'), '.azurewebsites.net')]"
-        },
-        "insertCsvSecret": {
-            "type": "string",
-            "value": "[listSecrets(resourceId('Microsoft.Web/sites/functions', variables('faName'), 'insertcsv'),'2020-06-01').key]"
-        },
-        "automticInsertUrl": {
-            "type": "string",
-            "value": "[concat('https://', variables('saName'), '.blob.core.windows.net/automatic-import')]"
-        },
-        "automticInsertKey": {
-            "type": "string",
-            "value": "[listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('saName')), '2019-04-01').keys[0].value]"
-        }
-    }
+    "outputs": {}
 }
