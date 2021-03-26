@@ -87,9 +87,8 @@ must be assigned the role of `Azure Digital Twins Data Owner` in the target
 digital twin.
 
 # Example Azure Data Factory to Azure Digital Twin pipeline
-The following template create an example app that uses the CSV injector to link Azure data factory to Azure digital twins.
 
-[![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FCosmo-Tech%2Fazure-digital-twin-injector%2Fdeploy%2Fexample%2Fdeploy.json)
+See [Getting started with data injection](https://github.com/Cosmo-Tech/getting-started-with-data-injection) for a complete example.
 
 # Known Limitations
 
