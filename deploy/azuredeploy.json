@@ -4,42 +4,35 @@
     "parameters": {
         "location": {
             "type": "string",
+            "defaultValue": "[resourceGroup().location]",
             "metadata": {
                 "description": "location for resource created."
             }
         },
-        "digitalTwinsInstancesName": {
+        "digitalTwinsName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of an existing digital Twins instances in the resource group."
-            }
-        },
-        "dataFactoryName": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Name of an existing data factory instance name in the resource group."
+                "description": "Name of the destination Digital Twins. Must be in this resource group."
             }
         },
         "functionAppName": {
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of the function app to be created. Leave empty for automatic naming."
+                "description": "Name of the function app to be created."
             }
         }
     },
     "variables": {
-        "saName": "[concat('injectsa', take(uniqueString(resourceGroup().id), 8))]",
-        "faName": "[if(empty(parameters('functionAppName')), concat('injectfa', take(uniqueString(resourceGroup().id), 8)), parameters('functionAppName'))]"
+        "storageName": "[concat('storage', parameters('functionAppName'))]"
     },
     "functions": [],
     "resources": [
         {
             "type": "Microsoft.Storage/storageAccounts",
             "apiVersion": "2020-08-01-preview",
-            "name": "[variables('saName')]",
+            "name": "[variables('storageName')]",
             "location": "[parameters('location')]",
             "sku": {
                 "name": "Standard_LRS",
@@ -57,7 +50,7 @@
                     "apiVersion": "2020-08-01-preview",
                     "name": "default/json-queue",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Storage/storageAccounts',variables('saName'))]"
+                        "[resourceId('Microsoft.Storage/storageAccounts',variables('storageName'))]"
                     ]
                 },
                 {
@@ -65,7 +58,7 @@
                     "apiVersion": "2020-08-01-preview",
                     "name": "default/input-csv",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Storage/storageAccounts', variables('saName'))]"
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
                     ],
                     "properties": {
                         "defaultEncryptionScope": "$account-encryption-key",
@@ -78,7 +71,7 @@
                     "apiVersion": "2020-08-01-preview",
                     "name": "default/automatic-import",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Storage/storageAccounts', variables('saName'))]"
+                        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageName'))]"
                     ],
                     "properties": {
                         "defaultEncryptionScope": "$account-encryption-key",
@@ -91,12 +84,12 @@
         {
             "type": "Microsoft.Web/sites",
             "apiVersion": "2020-10-01",
-            "name": "[variables('faName')]",
+            "name": "[parameters('functionAppName')]",
             "location": "[parameters('location')]",
             "dependsOn": [
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('saName'), 'default', 'input-csv')]",
-                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('saName'), 'default', 'automatic-import')]",
-                "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', variables('saName'), 'default', 'json-queue')]"
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', 'input-csv')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices/containers', variables('storageName'), 'default', 'automatic-import')]",
+                "[resourceId('Microsoft.Storage/storageAccounts/queueServices/queues', variables('storageName'), 'default', 'json-queue')]"
             ],
             "kind": "functionapp",
             "identity": {
@@ -107,7 +100,7 @@
                     "appSettings": [
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('saName'), ';AccountKey=', listKeys(variables('saName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
                         },
                         {
                             "name": "AzureWebJobsSecretStorageType",
@@ -115,11 +108,11 @@
                         },
                         {
                             "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('saName'), ';AccountKey=', listKeys(variables('saName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
-                            "value": "[concat(variables('faName'), take(uniqueString(variables('faName')), 4))]"
+                            "value": "[concat(parameters('functionAppName'), take(uniqueString(parameters('functionAppName')), 4))]"
                         },
                         {
                             "name": "FUNCTIONS_WORKER_RUNTIME",
@@ -135,7 +128,7 @@
                         },
                         {
                             "name": "WATCHED_CSV_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('saName'), ';AccountKey=', listKeys(variables('saName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
                         },
                         {
                             "name": "WATCHED_CSV_STORAGE_CONTAINER",
@@ -143,7 +136,7 @@
                         },
                         {
                             "name": "CSV_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('saName'), ';AccountKey=', listKeys(variables('saName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
                         },
                         {
                             "name": "CSV_STORAGE_CONTAINER",
@@ -151,7 +144,7 @@
                         },
                         {
                             "name": "JSON_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('saName'), ';AccountKey=', listKeys(variables('saName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
                         },
                         {
                             "name": "JSON_STORAGE_QUEUE",
@@ -167,7 +160,7 @@
                     "type": "sourcecontrols",
                     "location": "[parameters('location')]",
                     "dependsOn": [
-                        "[resourceId('Microsoft.Web/sites', variables('faName'))]"
+                        "[resourceId('Microsoft.Web/sites', parameters('functionAppName'))]"
                     ],
                     "properties": {
                         "repoUrl": "https://github.com/Cosmo-Tech/azure-digital-twin-injector.git",
@@ -179,36 +172,13 @@
             ]
         },
         {
-            "condition": "[not(empty(parameters('digitalTwinsInstancesName')))]",
             "type": "Microsoft.Authorization/roleAssignments",
             "apiVersion": "2018-01-01-preview",
-            "name": "[guid(uniqueString(variables('faName'), 'Azure Digital Twins Data Owner', parameters('digitalTwinsInstancesName')))]",
-            "scope": "[concat('Microsoft.DigitalTwins/digitalTwinsInstances/', parameters('digitalTwinsInstancesName'))]",
+            "name": "[guid(uniqueString(parameters('functionAppName'), 'Azure Digital Twins Data Owner', parameters('digitalTwinsName')))]",
+            "scope": "[concat('Microsoft.DigitalTwins/digitalTwinsInstances/', parameters('digitalTwinsName'))]",
             "properties": {
                 "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'bcd981a7-7f74-457b-83e1-cceb9e632ffe')]",
-                "principalId": "[reference(resourceId('Microsoft.Web/sites', variables('faName')), '2020-10-01', 'Full').identity.principalId]"
-            },
-            "dependsOn": [
-                "[resourceId('Microsoft.Web/sites', variables('faName'))]"
-            ]
-        },
-        {
-            "condition": "[not(empty(parameters('dataFactoryName')))]",
-            "type": "Microsoft.DataFactory/factories/linkedServices",
-            "apiVersion": "2018-06-01",
-            "name": "[concat(parameters('dataFactoryName'),'/',variables('faName'))]",
-            "properties": {
-                "type": "AzureFunction",
-                "typeProperties": {
-                    "functionAppUrl": "[concat('https://', variables('faName'), '.azurewebsites.net')]",
-                    "functionKey": {
-                        "type": "SecureString",
-                        "value": "[listKeys(concat(resourceId('Microsoft.Web/sites/', variables('faName')), '/host/default'), '2020-12-01').functionKeys.default]"
-                    }
-                },
-                "dependsOn": [
-                    "[resourceId('Microsoft.Web/sites', variables('faName'))]"
-                ]
+                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2020-10-01', 'Full').identity.principalId]"
             }
         }
     ],
