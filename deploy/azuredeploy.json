@@ -107,7 +107,7 @@
                     "appSettings": [
                         {
                             "name": "AzureWebJobsStorage",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
                         },
                         {
                             "name": "AzureWebJobsSecretStorageType",
@@ -115,7 +115,7 @@
                         },
                         {
                             "name": "WEBSITE_CONTENTAZUREFILECONNECTIONSTRING",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
                         },
                         {
                             "name": "WEBSITE_CONTENTSHARE",
@@ -135,7 +135,7 @@
                         },
                         {
                             "name": "WATCHED_CSV_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
                         },
                         {
                             "name": "WATCHED_CSV_STORAGE_CONTAINER",
@@ -143,7 +143,7 @@
                         },
                         {
                             "name": "CSV_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
                         },
                         {
                             "name": "CSV_STORAGE_CONTAINER",
@@ -151,7 +151,7 @@
                         },
                         {
                             "name": "JSON_STORAGE_CONNECTION",
-                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value)]"
+                            "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageName'), ';AccountKey=', listKeys(variables('storageName'),'2019-06-01').keys[0].value,';EndpointSuffix=core.windows.net')]"
                         },
                         {
                             "name": "JSON_STORAGE_QUEUE",
