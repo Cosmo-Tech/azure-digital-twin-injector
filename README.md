@@ -77,7 +77,7 @@ dt-injector canbe configured using the following settings:
 | CSV_STORAGE_CONTAINER          | name of the container where new csv are read by the http trigger                                    |
 | JSON_STORAGE_CONNECTION        | connection string for the storage account hosting the input csv file container                      |
 | JSON_STORAGE_QUEUE             | name of the queue linking the two functions                                                         |
-| DIGITAL_TWIN_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
+| DIGITAL_TWINS_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
 
 
 an example `local.settings.json` is provided in the repository. In addition,

@@ -16,6 +16,13 @@
                 "description": "Name of the destination Digital Twins. Must be in this resource group."
             }
         },
+        "digitalTwinsUrl": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Url for the destination Digital Twins."
+            }
+        },
         "functionAppName": {
             "type": "string",
             "defaultValue": "",
@@ -149,6 +156,10 @@
                         {
                             "name": "JSON_STORAGE_QUEUE",
                             "value": "json-queue"
+                        },
+                        {
+                            "name": "DIGITAL_TWINS_URL",
+                            "value": "[parameters('digitalTwinsUrl')]"
                         }
                     ]
                 }
