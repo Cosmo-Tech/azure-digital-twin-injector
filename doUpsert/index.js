@@ -2,7 +2,7 @@ const { DigitalTwinsClient } = require("@azure/digital-twins-core");
 const { DefaultAzureCredential } = require("@azure/identity");
 
 module.exports = async function (context, jsonItem) {
-    const digitalTwin = new DigitalTwinsClient(process.env.DIGITAL_TWIN_URL, new DefaultAzureCredential());
+    const digitalTwin = new DigitalTwinsClient(process.env.DIGITAL_TWINS_URL, new DefaultAzureCredential());
     const jsonString = JSON.stringify(jsonItem);
     if ("$relationshipId" in jsonItem) {
             setTimeout(() => {
