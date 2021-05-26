@@ -104,6 +104,7 @@
             },
             "properties": {
                 "siteConfig": {
+                    "functionAppScaleLimit": 1,
                     "appSettings": [
                         {
                             "name": "AzureWebJobsStorage",
