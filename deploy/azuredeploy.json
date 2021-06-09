@@ -189,6 +189,18 @@
                         {
                             "name": "DIGITAL_TWINS_URL",
                             "value": "[concat('https://',if(empty(parameters('digitalTwinsHostName')), reference(resourceId('Microsoft.DigitalTwins/digitalTwinsInstances',parameters('digitalTwinsName')),'2020-12-01','Full').properties.hostName, parameters('digitalTwinsHostName')))]"
+                        },
+                        {
+                            "name": "AZURE_TENANT_ID",
+                            "value": "[parameters('azureTenantId')]"
+                        },
+                        {
+                            "name": "AZURE_CLIENT_ID",
+                            "value": "[parameters('azureClientId')]"
+                        },
+                        {
+                            "name": "AZURE_CLIENT_SECRET",
+                            "value": "[parameters('azureClientSecret')]"
                         }
                     ]
                 }
