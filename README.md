@@ -67,7 +67,7 @@ To insert relation `dt-injestor` expects the folowing columns:
 
 # Configuration
 
-dt-injector canbe configured using the following settings:
+dt-injector can be configured using the following settings:
 
 | **Application settings**       |                                                                                                     |
 | ------------------------------ | --------------------------------------------------------------------------------------------------- |
@@ -78,6 +78,10 @@ dt-injector canbe configured using the following settings:
 | JSON_STORAGE_CONNECTION        | connection string for the storage account hosting the input csv file container                      |
 | JSON_STORAGE_QUEUE             | name of the queue linking the two functions                                                         |
 | DIGITAL_TWINS_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
+| USE_CLIENT_SECRET              | set to true to use Azure Client Secret Credential                                                   |
+| AZURE_TENANT_ID                | the tenant id for credentials (default use Managed Identity)                                        |
+| AZURE_CLIENT_ID                | the client id for credentials (default use Managed Identity)                                        |
+| AZURE_CLIENT_SECRET            | the client secret for credentials (default use Managed Identity)                                    |
 
 
 an example `local.settings.json` is provided in the repository. In addition,
