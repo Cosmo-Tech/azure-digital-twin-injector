@@ -16,13 +16,6 @@
                 "description": "Name of the destination Digital Twins. Must be in this resource group."
             }
         },
-        "digitalTwinsUrl": {
-            "type": "string",
-            "defaultValue": "",
-            "metadata": {
-                "description": "Url for the destination Digital Twins."
-            }
-        },
         "functionAppName": {
             "type": "string",
             "defaultValue": "",
@@ -160,7 +153,7 @@
                         },
                         {
                             "name": "DIGITAL_TWINS_URL",
-                            "value": "[parameters('digitalTwinsUrl')]"
+                            "value": "[concat('https://',reference(resourceId('Microsoft.DigitalTwins/digitalTwinsInstances'),parameters('digitalTwinsName'),'2020-12-01','Full').properties.hostName)]"
                         }
                     ]
                 }
