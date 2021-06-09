@@ -22,6 +22,34 @@
             "metadata": {
                 "description": "Name of the function app to be created."
             }
+        },
+        "useClientSecret": {
+            "type": "bool",
+            "defaultValue": false,
+            "metadata": {
+                "description": "Use Client secret instead of Managed Identity for ADT connection."
+            }
+        },
+        "azureTenantId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Tenant Id"
+            }
+        },
+        "azureClientId": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Client Id"
+            }
+        },
+        "azureClientSecret": {
+            "type": "secureString",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Azure Client Secret"
+            }
         }
     },
     "variables": {
@@ -178,6 +206,7 @@
         },
         {
             "type": "Microsoft.Authorization/roleAssignments",
+            "condition": "[not(parameters('useClientSecret'))]",
             "apiVersion": "2018-01-01-preview",
             "name": "[guid(uniqueString(parameters('functionAppName'), 'Azure Digital Twins Data Owner', parameters('digitalTwinsName')))]",
             "scope": "[concat('Microsoft.DigitalTwins/digitalTwinsInstances/', parameters('digitalTwinsName'))]",
