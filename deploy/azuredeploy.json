@@ -13,7 +13,14 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of the destination Digital Twins. Must be in this resource group."
+                "description": "Name of the destination Digital Twins."
+            }
+        },
+        "digitalTwinsHostName": {
+            "type": "string",
+            "defaultValue": "",
+            "metadata": {
+                "description": "Host name of the destination Digital Twins (without https)."
             }
         },
         "functionAppName": {
@@ -181,7 +188,7 @@
                         },
                         {
                             "name": "DIGITAL_TWINS_URL",
-                            "value": "[concat('https://',reference(resourceId('Microsoft.DigitalTwins/digitalTwinsInstances',parameters('digitalTwinsName')),'2020-12-01','Full').properties.hostName)]"
+                            "value": "[concat('https://',if(empty(parameters('digitalTwinsHostName')), reference(resourceId('Microsoft.DigitalTwins/digitalTwinsInstances',parameters('digitalTwinsName')),'2020-12-01','Full').properties.hostName, parameters('digitalTwinsHostName')))]"
                         }
                     ]
                 }

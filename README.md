@@ -90,6 +90,14 @@ idendity](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-id
 must be assigned the role of `Azure Digital Twins Data Owner` in the target
 digital twin.
 
+# Azure deployment parameters options
+## Security
+The Azure Functions connects by default with a Managed Identity.
+Set 'Use client secret' to use an app registration credential with tenant id, client id and client secret.
+## ADT
+If you use an ADT in the same resource group than the deployed Azure Function you can only set the ADT name.
+In the other case, to use an ADT in other Resource Group or another subscription you must set the ADT Host name.
+
 # Example Azure Data Factory to Azure Digital Twin pipeline
 
 See [Getting started with data injection](https://github.com/Cosmo-Tech/getting-started-with-data-injection) for a complete example.
