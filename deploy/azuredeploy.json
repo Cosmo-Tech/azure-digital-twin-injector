@@ -175,16 +175,6 @@
                     }
                 }
             ]
-        },
-        {
-            "type": "Microsoft.Authorization/roleAssignments",
-            "apiVersion": "2018-01-01-preview",
-            "name": "[guid(uniqueString(parameters('functionAppName'), 'Azure Digital Twins Data Owner', parameters('digitalTwinsName')))]",
-            "scope": "[concat('Microsoft.DigitalTwins/digitalTwinsInstances/', parameters('digitalTwinsName'))]",
-            "properties": {
-                "roleDefinitionId": "[concat('/subscriptions/', subscription().subscriptionId, '/providers/Microsoft.Authorization/roleDefinitions/', 'bcd981a7-7f74-457b-83e1-cceb9e632ffe')]",
-                "principalId": "[reference(resourceId('Microsoft.Web/sites', parameters('functionAppName')), '2020-10-01', 'Full').identity.principalId]"
-            }
         }
     ],
     "outputs": {}
