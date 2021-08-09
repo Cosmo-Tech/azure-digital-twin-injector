@@ -1,6 +1,7 @@
 # dt-injector - Digital Twin CSV Injection
 
 [![Deploy to Azure](https://aka.ms/deploytoazurebutton)](https://portal.azure.com/#create/Microsoft.Template/uri/https%3A%2F%2Fraw.githubusercontent.com%2FCosmo-Tech%2Fazure-digital-twin-injector%2Fmain%2Fdeploy%2Fazuredeploy.json)
+AFTER DEPLOYING YOU MUST SET THE AZURE FUNCTION AS 'AZURE DIGITAL TWINS DATA OWNER' OF THE ADT YOU WANT TO HANDLE
 
 dt-injector is an Azure Function App to inject twins and relations into an
 Azure Digital Twin instance from CSV files. It simplifies feeding data into a

@@ -13,7 +13,7 @@
             "type": "string",
             "defaultValue": "",
             "metadata": {
-                "description": "Name of the destination Digital Twins. Must be in this resource group."
+                "description": "Name of the destination Digital Twins."
             }
         },
         "functionAppName": {
