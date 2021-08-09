@@ -160,7 +160,7 @@
                         },
                         {
                             "name": "DIGITAL_TWINS_URL",
-                            "value": "[concat('https://',reference(resourceId(parameters('digitalTwinsResourceGroup'), resourceId('Microsoft.DigitalTwins/digitalTwinsInstances',parameters('digitalTwinsName')),'2020-12-01','Full').properties.hostName)]"
+                            "value": "[concat('https://',reference(resourceId(parameters('digitalTwinsResourceGroup'), 'Microsoft.DigitalTwins/digitalTwinsInstances',parameters('digitalTwinsName')),'2020-12-01','Full').properties.hostName)]"
                         }
                     ]
                 }
