@@ -2,13 +2,19 @@ const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
 
 
+function logDebug(str) {
+  if (process.env.LOG_DEBUG) {
+    console.debug(str);
+  }
+}
+
 module.exports.csv2json = async function(/*context*/ _, csvData) {
   console.log('Running csv2json...');
   const queueClient = new QueueClient(
       process.env.JSON_STORAGE_CONNECTION,
       process.env.JSON_STORAGE_QUEUE);
   console.log('Queue client: ' + process.env.JSON_STORAGE_QUEUE);
-  console.log('Queue: create if not exist');
+  logDebug('Queue: create if not exist');
   queueClient.createIfNotExists();
   console.log('Parsing CSV data...');
   let count = 0;
@@ -16,10 +22,10 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
     header: true,
     dynamicTyping: true,
     step: function(results, parser) {
-      console.log('Parser step');
+      logDebug('Parser step');
       let content = {};
-      console.log('Iterating results data');
-      console.debug('Results data: ' + JSON.stringify(results.data));
+      logDebug('Iterating results data');
+      logDebug('Results data: ' + JSON.stringify(results.data));
       if (Object.keys(results.data).length == 1) {
         console.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
@@ -29,12 +35,12 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             const returnVal = (i === arr.length - 1) ?
               (acc[e.toString()] = results.data[key]) :
               acc[e.toString()] || (acc[e.toString()] = {});
-            console.debug('Transformed data: ' + returnVal);
+            logDebug('Transformed data: ' + returnVal);
             return returnVal;
           }, content);
         }
         /*
-        console.log('Sending message to queue');
+        logDebug('Sending message to queue');
         queueClient.sendMessage(
             Buffer.from(JSON.stringify(content)).toString('base64'))
             .catch((e) => {
