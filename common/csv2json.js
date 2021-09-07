@@ -45,7 +45,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
         }
 
         function sendMessage(content) {
-          logDebug('Sending message to queue');
+          console.log('Sending message to queue');
           queueClient.sendMessage(
               Buffer.from(JSON.stringify(content)).toString('base64'))
               .catch((e) => {
