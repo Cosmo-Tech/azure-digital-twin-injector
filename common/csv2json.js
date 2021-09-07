@@ -19,6 +19,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
   console.log('Parsing CSV data...');
   let count = 0;
   let cumulatedIds = '';
+  let batchCount = 0;
   Papa.parse(csvData.toString('utf8'), {
     header: true,
     dynamicTyping: true,
@@ -32,6 +33,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       } else {
         cumulatedIds = cumulatedIds + ',' + results.data.$id;
         count = count + 1;
+        batchCount = batchCount + 1;
         for (const key in results.data) {
           key.split('.').reduce((acc, e, i, arr) => {
             const returnVal = (i === arr.length - 1) ?
@@ -41,15 +43,27 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             return returnVal;
           }, content);
         }
-        /*
-        logDebug('Sending message to queue');
-        queueClient.sendMessage(
-            Buffer.from(JSON.stringify(content)).toString('base64'))
-            .catch((e) => {
-              console.error('error sending message ' + e);
-              throw (e);
-            });
-            */
+
+        function sendMessage(content) {
+          logDebug('Sending message to queue');
+          queueClient.sendMessage(
+              Buffer.from(JSON.stringify(content)).toString('base64'))
+              .catch((e) => {
+                console.error('error sending message ' + e);
+                throw (e);
+              });
+        }
+
+        if (batchCount = 300) {
+          console.log('Waiting 5000 ms for next queue batch...');
+          setTimeout(() => {
+            console.log('Resuming sending message');
+            batchCount = 0;
+            sendMessage(content);
+          }, 5000).ref();
+        } else {
+          sendMessage(content);
+        }
       }
     },
     error: function(err, file, inputElem, reason) {
