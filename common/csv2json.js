@@ -11,6 +11,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
   console.log('Queue: create if not exist');
   queueClient.createIfNotExists();
   console.log('Parsing CSV data...');
+  let count = 0;
   Papa.parse(csvData.toString('utf8'), {
     header: true,
     dynamicTyping: true,
@@ -22,6 +23,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       if (Object.keys(results.data).length == 1) {
         console.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
+        count = count + 1;
         for (const key in results.data) {
           key.split('.').reduce((acc, e, i, arr) => {
             const returnVal = (i === arr.length - 1) ?
@@ -41,6 +43,9 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             });
             */
       }
+    },
+    complete: function() {
+      console.log('Total sent messages:' + count.toString());
     }
   });
 };
