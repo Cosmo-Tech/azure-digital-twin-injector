@@ -31,6 +31,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             return returnVal;
           }, content);
         }
+        /*
         console.log('Sending message to queue');
         queueClient.sendMessage(
             Buffer.from(JSON.stringify(content)).toString('base64'))
@@ -38,6 +39,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
               console.error('error sending message ' + e);
               throw (e);
             });
+            */
       }
     }
   });
