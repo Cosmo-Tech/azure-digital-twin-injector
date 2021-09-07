@@ -56,9 +56,11 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
 
         if (batchCount = 300) {
           console.log('Waiting 5000 ms for next queue batch...');
+          parser.pause();
           setTimeout(() => {
             console.log('Resuming sending message');
             batchCount = 0;
+            parser.resume();
             sendMessage(content);
           }, 5000).ref();
         } else {
