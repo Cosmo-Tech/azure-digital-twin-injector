@@ -29,7 +29,8 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       queueClient.sendMessage(
           Buffer.from(JSON.stringify(content)).toString('base64'))
           .catch((e) => {
-            console.log('error sending message ' + e);
+            console.error('error sending message ' + e);
+            throw (e);
           });
     }
   });
