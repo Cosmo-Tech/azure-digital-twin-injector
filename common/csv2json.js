@@ -44,6 +44,9 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             */
       }
     },
+    error: function(err, file, inputElem, reason) {
+      console.error('Papaparse error:' + err + ', file:' + file + ', inputElem:' + inputElem + ', reason:' + reason);
+    },
     complete: function() {
       console.log('Total sent messages:' + count.toString());
     }
