@@ -18,7 +18,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       console.log('Parser step');
       let content = {};
       console.log('Iterating results data');
-      console.debug('Results data: ' + results.data);
+      console.debug('Results data: ' + JSON.stringify(results.data));
       for (const key in results.data) {
         key.split('.').reduce((acc, e, i, arr) => {
           const returnVal = (i === arr.length - 1) ?
