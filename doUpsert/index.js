@@ -19,16 +19,15 @@ module.exports = async function(context, jsonItem) {
           });
     }, 100).ref();
   } else if ('$id' in jsonItem) {
-    if (jsonItem.$id) {
-      // twin
-      setTimeout(() => {
-        digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
-            .catch((e) => {
-              console.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
-              console.error(`failed twin: ${jsonString}`);
-              throw (e);
-            });
-      }, 20).ref();
+    // twin
+    setTimeout(() => {
+      digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
+          .catch((e) => {
+            console.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
+            console.error(`failed twin: ${jsonString}`);
+            throw (e);
+          });
+    }, 20).ref();
   } else {
     context.warning(`unrecognised message format: ${jsonString}`);
   }
