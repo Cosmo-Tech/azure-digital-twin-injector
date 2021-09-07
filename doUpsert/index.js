@@ -29,9 +29,6 @@ module.exports = async function(context, jsonItem) {
               throw (e);
             });
       }, 20).ref();
-    } else {
-      console.warning('json item with null $id detected');
-    }
   } else {
     context.warning(`unrecognised message format: ${jsonString}`);
   }
