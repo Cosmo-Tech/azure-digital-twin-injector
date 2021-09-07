@@ -29,6 +29,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       if (Object.keys(results.data).length == 1) {
         console.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
+        console.log('Handling id' + results.data.$id);
         count = count + 1;
         for (const key in results.data) {
           key.split('.').reduce((acc, e, i, arr) => {
