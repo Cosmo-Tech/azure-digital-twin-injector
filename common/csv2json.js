@@ -18,6 +18,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
   queueClient.createIfNotExists();
   console.log('Parsing CSV data...');
   let count = 0;
+  let cumulatedIds = '';
   Papa.parse(csvData.toString('utf8'), {
     header: true,
     dynamicTyping: true,
@@ -29,7 +30,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       if (Object.keys(results.data).length == 1) {
         console.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
-        console.log('Handling id' + results.data.$id);
+        cumulatedIds = cumulatedIds + ',' + results.data.$id;
         count = count + 1;
         for (const key in results.data) {
           key.split('.').reduce((acc, e, i, arr) => {
@@ -53,9 +54,11 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
     },
     error: function(err, file, inputElem, reason) {
       console.error('Papaparse error:' + err + ', file:' + file + ', inputElem:' + inputElem + ', reason:' + reason);
+      console.log('Cumulated ids: ' + cumulatedIds);
     },
     complete: function() {
       console.log('Total sent messages:' + count.toString());
+      console.log('Cumulated ids: ' + cumulatedIds);
     }
   });
 };
