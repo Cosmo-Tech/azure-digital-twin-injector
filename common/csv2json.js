@@ -32,15 +32,12 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
           }, content);
         }
         console.log('Sending message to queue');
-        const sendMessageResponse = await queueClient.sendMessage(
+        queueClient.sendMessage(
             Buffer.from(JSON.stringify(content)).toString('base64'))
             .catch((e) => {
               console.error('error sending message ' + e);
               throw (e);
             });
-        console.debug(
-            `Sent message successfully, service assigned message Id: ${sendMessageResponse.messageId}, service assigned request Id: ${sendMessageResponse.requestId}`
-          );
       }
     }
   });
