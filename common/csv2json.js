@@ -19,7 +19,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
   console.log('Parsing CSV data...');
   let count = 0;
   let cumulatedIds = '';
-  let batchCount = 0;
+  var batchCount = 0;
   Papa.parse(csvData.toString('utf8'), {
     header: true,
     dynamicTyping: true,
@@ -54,7 +54,7 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
               });
         }
 
-        if (batchCount = 300) {
+        if (batchCount >= 300) {
           console.log('Waiting 5000 ms for next queue batch...');
           parser.pause();
           setTimeout(() => {
