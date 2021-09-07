@@ -19,22 +19,26 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       let content = {};
       console.log('Iterating results data');
       console.debug('Results data: ' + JSON.stringify(results.data));
-      for (const key in results.data) {
-        key.split('.').reduce((acc, e, i, arr) => {
-          const returnVal = (i === arr.length - 1) ?
-            (acc[e.toString()] = results.data[key]) :
-            acc[e.toString()] || (acc[e.toString()] = {});
-          console.debug('Transformed data: ' + returnVal);
-          return returnVal;
-        }, content);
+      if (Object.keys(results.data).length == 1) {
+        console.warning('CSV parsed object with only 1 property: ignored. Certainly a blank line');
+      } else {
+        for (const key in results.data) {
+          key.split('.').reduce((acc, e, i, arr) => {
+            const returnVal = (i === arr.length - 1) ?
+              (acc[e.toString()] = results.data[key]) :
+              acc[e.toString()] || (acc[e.toString()] = {});
+            console.debug('Transformed data: ' + returnVal);
+            return returnVal;
+          }, content);
+        }
+        console.log('Sending message to queue');
+        queueClient.sendMessage(
+            Buffer.from(JSON.stringify(content)).toString('base64'))
+            .catch((e) => {
+              console.error('error sending message ' + e);
+              throw (e);
+            });
       }
-      console.log('Sending message to queue');
-      queueClient.sendMessage(
-          Buffer.from(JSON.stringify(content)).toString('base64'))
-          .catch((e) => {
-            console.error('error sending message ' + e);
-            throw (e);
-          });
     }
   });
 };
