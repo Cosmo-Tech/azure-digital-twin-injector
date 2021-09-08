@@ -14,6 +14,6 @@ module.exports = async function(context, req) {
   csv2json(context, context.bindings.csvdata);
   context.res = {
     status: 200,
-    body: ''
+    body: '',
   };
 };

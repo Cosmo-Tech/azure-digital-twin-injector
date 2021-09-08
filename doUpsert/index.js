@@ -7,7 +7,8 @@
  * which contains the ADT API compliant JSON to upsert.
  * Requests are timedout to respect ADT API limits:
  * https://docs.microsoft.com/en-us/azure/digital-twins/reference-service-limits
- * The queue trigger is serialized in host.json with batchSize and maxDequeueCount.
+ * The queue trigger is serialized in host.json
+ * with batchSize and maxDequeueCount.
  * https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue
  * Errors during upsert of twin or relationship throw errors.
  */
@@ -25,9 +26,9 @@ module.exports = async function(context, jsonItem) {
       process.env.DIGITAL_TWINS_URL,
       new DefaultAzureCredential());
   const jsonString = JSON.stringify(jsonItem);
-  context.log.verbose('Json item: ' + jsonString);
+  context.log.verbose(`Json item: ${jsonString}`);
   if ('$relationshipId' in jsonItem) {
-    context.log.verbose('upserting relationship' + jsonItem.$relationshipId);
+    context.log.verbose(`upserting relationship ${jsonItem.$relationshipId}`);
     await (async () => {
       context.log.verbose('waiting 100ms');
       sleep(100);
@@ -36,13 +37,14 @@ module.exports = async function(context, jsonItem) {
           jsonItem.$sourceId,
           jsonItem.$relationshipId, jsonItem)
           .catch((e) => {
-            context.log.error(`relationship ${jsonItem.$relationshipId} on source ${jsonItem.$sourceId} insertion failed: ${e}`);
+            context.log.error(`relationship ${jsonItem.$relationshipId}
+              on source ${jsonItem.$sourceId} insertion failed: ${e}`);
             const err = `failed relationship: ${jsonString}`;
             throw err;
           });
     })();
   } else if ('$id' in jsonItem) {
-    context.log.verbose('upserting twin' + jsonItem.$id);
+    context.log.verbose(`upserting twin ${jsonItem.$id}`);
     // twin
     await (async () => {
       context.log.verbose('waiting 20ms');
