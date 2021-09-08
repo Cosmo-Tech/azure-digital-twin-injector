@@ -1,5 +1,8 @@
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
+const sleep = (ms) => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
 
 function logDebug(str) {
@@ -55,14 +58,15 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
         }
 
         if (batchCount >= 300) {
-          console.log('Waiting 5000 ms for next queue batch...');
+          console.log('Waiting 1000 ms for next queue batch...');
           parser.pause();
-          setTimeout(() => {
+          (async () => {
             console.log('Resuming sending message');
+            await sleep(1000);
             batchCount = 0;
             parser.resume();
             sendMessage(content);
-          }, 5000).ref();
+          })();
         } else {
           sendMessage(content);
         }
