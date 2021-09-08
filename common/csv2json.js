@@ -7,7 +7,7 @@
  * Inserting to the queue is batched and timedout in order to respect
  * Azure Function limits on max outbound connections.
  * https://docs.microsoft.com/en-us/azure/azure-functions/functions-scale#service-limits
- * You can define an env var LOG_VERBOSE in order to get detailed of parsing.
+ * You can define an env var LOG_DETAILS in order to get details of parsing.
  */
 
 const {QueueClient} = require('@azure/storage-queue');
@@ -23,8 +23,8 @@ const batchWaitMs = 1000;
  * Log detailed information on parsing
  * @param {string} str text to log
  */
-function logVerbose(str) {
-  if (process.env.LOG_VERBOSE) {
+function logDetails(str) {
+  if (process.env.LOG_DETAILS) {
     context.log.verbose(str);
   }
 }
@@ -45,10 +45,10 @@ module.exports.csv2json = async function(context, csvData) {
     header: true,
     dynamicTyping: true,
     step: function(results, parser) {
-      logVerbose('Parser step');
+      logDetails('Parser step');
       let content = {};
-      logVerbose('Iterating results data');
-      logVerbose('Results data: ' + JSON.stringify(results.data));
+      logDetails('Iterating results data');
+      logDetails('Results data: ' + JSON.stringify(results.data));
       if (Object.keys(results.data).length == 1) {
         context.log.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
@@ -60,7 +60,7 @@ module.exports.csv2json = async function(context, csvData) {
             const returnVal = (i === arr.length - 1) ?
               (acc[e.toString()] = results.data[key]) :
               acc[e.toString()] || (acc[e.toString()] = {});
-            logVerbose('Transformed data: ' + returnVal);
+            logDetails('Transformed data: ' + returnVal);
             return returnVal;
           }, content);
         }
