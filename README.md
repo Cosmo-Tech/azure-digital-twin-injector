@@ -139,3 +139,5 @@ To run only one function use `func start --functions LIST,OF,FUNCTIONS`
 az login
 func azure functionapp logstream FUNCTION_APP_NAME
 ```
+### Debug
+[Microsoft documentation](https://docs.microsoft.com/en-us/azure/azure-functions/functions-reference-node?tabs=v2#local-debugging)
