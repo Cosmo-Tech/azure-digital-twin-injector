@@ -15,6 +15,18 @@ queue and upserts (i.e. insert or update) twins and relations into the
 digital twin. The last two function, `blobwatcher` and `insertcsv` are
 frontends for csv2json (respectively blob triggered and http triggered).
 
+# Change log
+## 0.0.1
+* send Azure storage queue messages by batch and wait to avoid max outbound connections
+* handle papaparse error & complete callbacks
+* use context for logs + logs
+* handles enpty line in csv
+* promisify setTimeout to respect batchSize correctly
+* LOG_DETAILS env var to debug CSV parsing
+* License
+* JSDoc
+* eslint
+
 # CSV input format
 
 The injector is triggered by uploading a CSV file to an azure storage
