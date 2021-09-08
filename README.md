@@ -121,7 +121,29 @@ These quotas limits the injection to at most 600 relations or 3,000 twins per mi
 
 # Debug & troubleshooting
 ## Azure
-Enable Application Insights and eventually Log Analytics
+Enable Application Insights and eventually Log Analytics.
+### Log stream
+Open your Function App and open 'Log stream'.
+Stay on Filesystem Logs.
+Note: you can connect to Log stream in CLI as explained later.
+By default the function app is configured with Warning level to avoid to much messages.
+Edit host.json to change the log level if needed and republish the function.
+### Poison Queue
+If there is are 5 consecutive errors during a Queue message handling (doUpsert) of json-queue, the message is put in poison queue.
+You can retrieve the failed message in the json-queue-poison Queue.
+### Application Insights
+Open Application Insights and go to 'Transaction Search'.
+Click on See All Data and filter Event Types on Exception only.
+Click on the exception title to display the message.
+### Log Analytics
+Open your Log Analytics Workspace and open 'Logs'.
+Run this kusto query to get last exceptions with their message:
+``` kusto
+FunctionAppLogs
+| where Level == "Error"
+| project TimeGenerated, HostInstanceId, Level, ExceptionMessage, Message, _ResourceId
+| sort by TimeGenerated desc
+```
 ## local debug
 Pre-requisites:
 * [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
