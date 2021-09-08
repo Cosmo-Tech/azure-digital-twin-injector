@@ -54,6 +54,8 @@ module.exports = async function(context, jsonItem) {
           .catch((e) => {
             context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
             context.log.error(`failed twin: ${jsonString}`);
+            console.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
+            console.error(`failed twin: ${jsonString}`);
             throw (e);
           });
     })()
