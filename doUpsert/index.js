@@ -27,11 +27,11 @@ module.exports = async function(context, jsonItem) {
   context.log.verbose('Json item: ' + jsonString);
   if ('$relationshipId' in jsonItem) {
     context.log.verbose('upserting relationship' + jsonItem.$relationshipId);
-    (async () => {
+    await (async () => {
       context.log.verbose('waiting 100ms');
       sleep(100);
       context.log.verbose('calling ADT relationship API');
-      digitalTwin.upsertRelationship(
+      await digitalTwin.upsertRelationship(
           jsonItem.$sourceId,
           jsonItem.$relationshipId, jsonItem)
           .catch((e) => {
@@ -42,16 +42,14 @@ module.exports = async function(context, jsonItem) {
   } else if ('$id' in jsonItem) {
     context.log.verbose('upserting twin' + jsonItem.$id);
     // twin
-    (async () => {
+    await (async () => {
       context.log.verbose('waiting 20ms');
       sleep(20);
       context.log.verbose('calling ADT twin API');
-      digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
+      await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
           .catch((e) => {
             context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
             context.log.error(`failed twin: ${jsonString}`);
-            console.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
-            console.error(`failed twin: ${jsonString}`);
           });
     })();
   } else {
