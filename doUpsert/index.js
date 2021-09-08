@@ -49,7 +49,9 @@ module.exports = async function(context, jsonItem) {
       await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
           .catch((e) => {
             context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
-            context.log.error(`failed twin: ${jsonString}`);
+            const err = `failed twin: ${jsonString}`;
+            // context.log.error(err);
+            throw err;
           });
     })();
   } else {

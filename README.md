@@ -121,8 +121,16 @@ Enable Application Insights and Log Analytics
 Pre-requisites:
 * [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
 * [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Ccsharp%2Cportal%2Cbash%2Ckeda)
+### Host locally
 ``` batch
 az login
-func azure functionapp fetch-app-settings FUNCTION_NAME
+func azure functionapp fetch-app-settings FUNCTION_APP_NAME
 func start
+```
+To run only one function use `func start --functions LIST,OF,FUNCTIONS`
+[Functions Core Tools Reference](https://docs.microsoft.com/en-us/azure/azure-functions/functions-core-tools-reference?tabs=v2)
+### Connect to Azure Functions log stream
+``` batch
+az login
+func azure functionapp logstream FUNCTION_APP_NAME
 ```
