@@ -5,34 +5,38 @@ const sleep = (ms) => {
 };
 
 
-function logDebug(str) {
-  if (process.env.LOG_DEBUG) {
-    console.debug(str);
+/**
+ * Log detailed information on parsing
+ * @param {string} str text to log
+ */
+function logVerbose(str) {
+  if (process.env.LOG_VERBOSE) {
+    context.log.debug(str);
   }
 }
 
-module.exports.csv2json = async function(/*context*/ _, csvData) {
-  console.log('Running csv2json...');
+module.exports.csv2json = async function(context, csvData) {
+  context.log('Running csv2json...');
   const queueClient = new QueueClient(
       process.env.JSON_STORAGE_CONNECTION,
       process.env.JSON_STORAGE_QUEUE);
-  console.log('Queue client: ' + process.env.JSON_STORAGE_QUEUE);
-  logDebug('Queue: create if not exist');
+  context.log.debug('Queue client: ' + process.env.JSON_STORAGE_QUEUE);
+  context.log.debug('Queue: create if not exist');
   queueClient.createIfNotExists();
-  console.log('Parsing CSV data...');
+  context.log('Parsing CSV data...');
   let count = 0;
   let cumulatedIds = '';
-  var batchCount = 0;
+  let batchCount = 0;
   Papa.parse(csvData.toString('utf8'), {
     header: true,
     dynamicTyping: true,
     step: function(results, parser) {
-      logDebug('Parser step');
+      logVerbose('Parser step');
       let content = {};
-      logDebug('Iterating results data');
-      logDebug('Results data: ' + JSON.stringify(results.data));
+      logVerbose('Iterating results data');
+      logVerbose('Results data: ' + JSON.stringify(results.data));
       if (Object.keys(results.data).length == 1) {
-        console.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
+        context.log.warn('CSV parsed object with only 1 property: ignored. Certainly a blank line');
       } else {
         cumulatedIds = cumulatedIds + ',' + results.data.$id;
         count = count + 1;
@@ -42,26 +46,30 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
             const returnVal = (i === arr.length - 1) ?
               (acc[e.toString()] = results.data[key]) :
               acc[e.toString()] || (acc[e.toString()] = {});
-            logDebug('Transformed data: ' + returnVal);
+            logVerbose('Transformed data: ' + returnVal);
             return returnVal;
           }, content);
         }
 
+        /**
+         * Send a message to the Azure Storage Queue
+         * @param {Object} content the object to send
+         */
         function sendMessage(content) {
-          console.log('Sending message to queue');
+          context.log.debug('Sending message to queue');
           queueClient.sendMessage(
               Buffer.from(JSON.stringify(content)).toString('base64'))
               .catch((e) => {
-                console.error('error sending message ' + e);
+                context.log.error('error sending message ' + e);
                 throw (e);
               });
         }
 
         if (batchCount >= 300) {
-          console.log('Waiting 1000 ms for next queue batch...');
+          context.log('Waiting 1000 ms for next queue batch...');
           parser.pause();
           (async () => {
-            console.log('Resuming sending message');
+            context.log('Resuming parer & sending message');
             await sleep(1000);
             batchCount = 0;
             parser.resume();
@@ -73,12 +81,12 @@ module.exports.csv2json = async function(/*context*/ _, csvData) {
       }
     },
     error: function(err, file, inputElem, reason) {
-      console.error('Papaparse error:' + err + ', file:' + file + ', inputElem:' + inputElem + ', reason:' + reason);
-      console.log('Cumulated ids: ' + cumulatedIds);
+      context.log.error('Papaparse error:' + err + ', file:' + file + ', inputElem:' + inputElem + ', reason:' + reason);
+      context.log.debug('Cumulated ids: ' + cumulatedIds);
     },
     complete: function() {
-      console.log('Total sent messages:' + count.toString());
-      console.log('Cumulated ids: ' + cumulatedIds);
+      context.log('Total sent messages:' + count.toString());
+      context.log.debug('Cumulated ids: ' + cumulatedIds);
     }
   });
 };
