@@ -39,7 +39,10 @@ module.exports = async function(context, jsonItem) {
             context.log.error(`failed relationship: ${jsonString}`);
             throw (e);
           });
-    })();
+    })()
+    .catch((e) => {
+      throw (e);
+    });
   } else if ('$id' in jsonItem) {
     context.log.verbose('upserting twin' + jsonItem.$id);
     // twin
@@ -53,7 +56,10 @@ module.exports = async function(context, jsonItem) {
             context.log.error(`failed twin: ${jsonString}`);
             throw (e);
           });
-    })();
+    })()
+    .catch((e) => {
+      throw (e);
+    });
   } else {
     context.log.warning(`unrecognised message format: ${jsonString}`);
   }

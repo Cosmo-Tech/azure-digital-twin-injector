@@ -88,7 +88,10 @@ module.exports.csv2json = async function(context, csvData) {
             batchCount = 0;
             parser.resume();
             sendMessage(content);
-          })();
+          })()
+          .catch((e) => {
+            throw (e);
+          });
         } else {
           sendMessage(content);
         }
