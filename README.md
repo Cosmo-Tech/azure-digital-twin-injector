@@ -16,21 +16,23 @@ digital twin. The last two function, `blobwatcher` and `insertcsv` are
 frontends for csv2json (respectively blob triggered and http triggered).
 
 # Change log
+
 ## 0.0.1
 * send Azure storage queue messages by batch and wait to avoid max outbound connections
 * handle papaparse error & complete callbacks
-* use context for logs + logs to send to log analytics
+* use context for logs + multple logs added to send to log analytics
 * default log level is warning
 * handles empty line in csv returned by parser
 * promisify setTimeout to respect batchSize correctly
-* throw exceptions for twins or relationships on error
+* throw exceptions for CSV parsing errors or send to queue errors
+* throw exceptions for twins or relationships upsert errors
   => message put in poison queue
-  => Exception easy to find with Application Insights
+  => Exception easy to find with Application Insights or Log Analytics
 * LOG_DETAILS env var to debug CSV parsing
-* License
+* MIT License
 * JSDoc
 * eslint config + coding style aligned
-* Add documentation in this README on how to debug Azure Functions
+* Add documentation in this README on how to troubleshoot Azure Functions
 
 # CSV input format
 
