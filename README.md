@@ -19,13 +19,18 @@ frontends for csv2json (respectively blob triggered and http triggered).
 ## 0.0.1
 * send Azure storage queue messages by batch and wait to avoid max outbound connections
 * handle papaparse error & complete callbacks
-* use context for logs + logs
+* use context for logs + logs to send to log analytics
+* default log level is warning
 * handles enpty line in csv
 * promisify setTimeout to respect batchSize correctly
+* throw exceptions for twins or relationships on error
+  => message put in poison queue
+  => Exception easy to find with Application Insights
 * LOG_DETAILS env var to debug CSV parsing
 * License
 * JSDoc
 * eslint
+* Add documentation in this README on how to debug Azure Functions
 
 # CSV input format
 

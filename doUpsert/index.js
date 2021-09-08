@@ -9,6 +9,7 @@
  * https://docs.microsoft.com/en-us/azure/digital-twins/reference-service-limits
  * The queue trigger is serialized in host.json with batchSize and maxDequeueCount.
  * https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue
+ * Errors during upsert of twin or relationship throw errors.
  */
 
 const {DigitalTwinsClient} = require('@azure/digital-twins-core');
@@ -36,7 +37,8 @@ module.exports = async function(context, jsonItem) {
           jsonItem.$relationshipId, jsonItem)
           .catch((e) => {
             context.log.error(`relationship ${jsonItem.$relationshipId} on source ${jsonItem.$sourceId} insertion failed: ${e}`);
-            context.log.error(`failed relationship: ${jsonString}`);
+            const err = `failed relationship: ${jsonString}`;
+            throw err;
           });
     })();
   } else if ('$id' in jsonItem) {
@@ -50,11 +52,10 @@ module.exports = async function(context, jsonItem) {
           .catch((e) => {
             context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
             const err = `failed twin: ${jsonString}`;
-            // context.log.error(err);
             throw err;
           });
     })();
   } else {
-    context.log.warning(`unrecognised message format: ${jsonString}`);
+    context.log.error(`unrecognized message format: ${jsonString}`);
   }
 };
