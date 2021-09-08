@@ -25,7 +25,7 @@ const batchWaitMs = 1000;
  */
 function logVerbose(str) {
   if (process.env.LOG_VERBOSE) {
-    context.log.debug(str);
+    context.log.verbose(str);
   }
 }
 
@@ -34,8 +34,8 @@ module.exports.csv2json = async function(context, csvData) {
   const queueClient = new QueueClient(
       process.env.JSON_STORAGE_CONNECTION,
       process.env.JSON_STORAGE_QUEUE);
-  context.log.debug('Queue client: ' + process.env.JSON_STORAGE_QUEUE);
-  context.log.debug('Queue: create if not exist');
+  context.log.verbose('Queue client: ' + process.env.JSON_STORAGE_QUEUE);
+  context.log.verbose('Queue: create if not exist');
   queueClient.createIfNotExists();
   context.log('Parsing CSV data...');
   let count = 0;
@@ -70,7 +70,7 @@ module.exports.csv2json = async function(context, csvData) {
          * @param {Object} content the object to send
          */
         function sendMessage(content) {
-          context.log.debug('Sending message to queue');
+          context.log.verbose('Sending message to queue');
           queueClient.sendMessage(
               Buffer.from(JSON.stringify(content)).toString('base64'))
               .catch((e) => {
@@ -96,11 +96,11 @@ module.exports.csv2json = async function(context, csvData) {
     },
     error: function(err, file, inputElem, reason) {
       context.log.error('Papaparse error:' + err + ', file:' + file + ', inputElem:' + inputElem + ', reason:' + reason);
-      context.log.debug('Cumulated ids: ' + cumulatedIds);
+      context.log.verbose('Cumulated ids: ' + cumulatedIds);
     },
     complete: function() {
       context.log('Total sent messages:' + count.toString());
-      context.log.debug('Cumulated ids: ' + cumulatedIds);
+      context.log.verbose('Cumulated ids: ' + cumulatedIds);
     }
   });
 };

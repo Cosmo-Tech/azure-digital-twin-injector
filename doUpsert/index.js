@@ -19,18 +19,18 @@ const sleep = (ms) => {
 
 module.exports = async function(context, jsonItem) {
   context.log('doUpsert function triggered');
-  context.log.debug('creating ADT client');
+  context.log.verbose('creating ADT client');
   const digitalTwin = new DigitalTwinsClient(
       process.env.DIGITAL_TWINS_URL,
       new DefaultAzureCredential());
   const jsonString = JSON.stringify(jsonItem);
-  context.log.debug('Json item: ' + jsonString);
+  context.log.verbose('Json item: ' + jsonString);
   if ('$relationshipId' in jsonItem) {
-    context.log.debug('upserting relationship' + jsonItem.$relationshipId);
+    context.log.verbose('upserting relationship' + jsonItem.$relationshipId);
     (async () => {
-      context.log.debug('waiting 100ms');
+      context.log.verbose('waiting 100ms');
       sleep(100);
-      context.log.debug('calling ADT relationship API');
+      context.log.verbose('calling ADT relationship API');
       digitalTwin.upsertRelationship(
           jsonItem.$sourceId,
           jsonItem.$relationshipId, jsonItem)
@@ -41,12 +41,12 @@ module.exports = async function(context, jsonItem) {
           });
     })();
   } else if ('$id' in jsonItem) {
-    context.log.debug('upserting twin' + jsonItem.$id);
+    context.log.verbose('upserting twin' + jsonItem.$id);
     // twin
     (async () => {
-      context.log.debug('waiting 20ms');
+      context.log.verbose('waiting 20ms');
       sleep(20);
-      context.log.debug('calling ADT twin API');
+      context.log.verbose('calling ADT twin API');
       digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
           .catch((e) => {
             context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
