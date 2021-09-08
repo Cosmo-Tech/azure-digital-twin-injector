@@ -1,3 +1,16 @@
+/**
+ * copyright (c) cosmo tech corporation.
+ * licensed under the mit license.
+ *
+ * Upsert a twin or a relationship into ADT
+ * This module handle 1 message from the queue
+ * which contains the ADT API compliant JSON to upsert.
+ * Requests are timedout to respect ADT API limits:
+ * https://docs.microsoft.com/en-us/azure/digital-twins/reference-service-limits
+ * The queue trigger is serialized in host.json with batchSize and maxDequeueCount.
+ * https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-storage-queue
+ */
+
 const {DigitalTwinsClient} = require('@azure/digital-twins-core');
 const {DefaultAzureCredential} = require('@azure/identity');
 const sleep = (ms) => {

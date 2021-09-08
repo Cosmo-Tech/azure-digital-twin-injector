@@ -1,8 +1,21 @@
+/**
+ * copyright (c) cosmo tech corporation.
+ * licensed under the mit license.
+ *
+ * This module reads CSV data line by line,
+ * convert the line to JSON and store it in an Azure Storate Queue.
+ * Inserting to the queue is batched and timedout in order to respect
+ * Azure Function limits on max outbound connections.
+ * https://docs.microsoft.com/en-us/azure/azure-functions/functions-scale#service-limits
+ */
+
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
+const batchCountSize = 300;
+const batchWaitMs = 1000;
 
 
 /**
@@ -65,12 +78,12 @@ module.exports.csv2json = async function(context, csvData) {
               });
         }
 
-        if (batchCount >= 300) {
-          context.log('Waiting 1000 ms for next queue batch...');
+        if (batchCount >= batchCountSize) {
+          context.log(`Waiting ${batchWaitMs} ms for next queue batch...`);
           parser.pause();
           (async () => {
             context.log('Resuming parer & sending message');
-            await sleep(1000);
+            await sleep(batchWaitMs);
             batchCount = 0;
             parser.resume();
             sendMessage(content);
