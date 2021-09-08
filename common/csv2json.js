@@ -7,6 +7,7 @@
  * Inserting to the queue is batched and timedout in order to respect
  * Azure Function limits on max outbound connections.
  * https://docs.microsoft.com/en-us/azure/azure-functions/functions-scale#service-limits
+ * You can define an env var LOG_VERBOSE in order to get detailed of parsing.
  */
 
 const {QueueClient} = require('@azure/storage-queue');
