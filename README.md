@@ -21,7 +21,7 @@ frontends for csv2json (respectively blob triggered and http triggered).
 * handle papaparse error & complete callbacks
 * use context for logs + logs to send to log analytics
 * default log level is warning
-* handles enpty line in csv
+* handles empty line in csv returned by parser
 * promisify setTimeout to respect batchSize correctly
 * throw exceptions for twins or relationships on error
   => message put in poison queue
@@ -29,7 +29,7 @@ frontends for csv2json (respectively blob triggered and http triggered).
 * LOG_DETAILS env var to debug CSV parsing
 * License
 * JSDoc
-* eslint
+* eslint config + coding style aligned
 * Add documentation in this README on how to debug Azure Functions
 
 # CSV input format
@@ -121,7 +121,7 @@ These quotas limits the injection to at most 600 relations or 3,000 twins per mi
 
 # Debug & troubleshooting
 ## Azure
-Enable Application Insights and Log Analytics
+Enable Application Insights and eventually Log Analytics
 ## local debug
 Pre-requisites:
 * [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
