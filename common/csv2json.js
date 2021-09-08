@@ -16,7 +16,7 @@ const Papa = require('papaparse');
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
-const batchCountSize = 300;
+const batchCountSize = 200;
 const batchWaitMs = 3000;
 
 
