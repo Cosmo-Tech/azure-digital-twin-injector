@@ -113,3 +113,16 @@ The function app is throttled to enforce these limitations, it is also
 required to turn off the [scale-out of the Function
 App](https://docs.microsoft.com/en-us/azure/azure-functions/functions-scale).
 These quotas limits the injection to at most 600 relations or 3,000 twins per minutes.
+
+# Debug & troubleshooting
+## Azure
+Enable Application Insights and Log Analytics
+## local debug
+Pre-requisites:
+* [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli)
+* [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local?tabs=linux%2Ccsharp%2Cportal%2Cbash%2Ckeda)
+``` batch
+az login
+func azure functionapp fetch-app-settings FUNCTION_NAME
+func start
+```
