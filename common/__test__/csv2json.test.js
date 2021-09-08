@@ -13,14 +13,31 @@ describe('csv2json', () => {
         testValue = '"$metadata.$model","$id"\n'
             +       '"modelName","instanceId"';
         mockMessages = [];
-        mockContext = {
-          log: {
-            "": function(txt) {},
-            "warn": function(txt) {},
-            "error": function(txt) {},
-            "verbose": function(txt) {},
-          },
+        
+        function mockContext() {};
+        mockContext.prototype.log = function(txt) {
+          console.log(txt);
         };
+        mockContext.prototype.log.warn = function(txt) {
+          console.warn(txt);
+        }
+        mockContext.prototype.log.error = function(txt) {
+          console.error(txt);
+        }
+        mockContext.prototype.log.verbose = function(txt) {
+          console.debug(txt);
+        }
+
+var context = new mockContext();
+        function log(txt) {
+          this.warn = function(txt) {};
+          this.error = function(txt) {};
+          this.verbose = function(txt) {};
+        }
+        function mockContext() {
+          log: new log()
+        };
+
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
