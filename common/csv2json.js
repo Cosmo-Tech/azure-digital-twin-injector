@@ -16,7 +16,7 @@ const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 const batchCountSize = 300;
-const batchWaitMs = 1000;
+const batchWaitMs = 3000;
 
 
 /**
