@@ -13,7 +13,14 @@ describe('csv2json', () => {
         testValue = '"$metadata.$model","$id"\n'
             +       '"modelName","instanceId"';
         mockMessages = [];
-        mockContext = {};
+        mockContext = {
+          log: {
+            "": function(txt) {},
+            "warn": function(txt) {},
+            "error": function(txt) {},
+            "verbose": function(txt) {},
+          },
+        };
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
