@@ -8,36 +8,29 @@ jest.mock('@azure/storage-queue', () => ({
     QueueClient: jest.fn().mockImplementation((_, __) => {})
 }));
 
+function MockContext() {};
+MockContext.prototype.log = function(txt) {
+  console.log(txt);
+};
+MockContext.prototype.log.warn = function(txt) {
+  console.warn(txt);
+}
+MockContext.prototype.log.error = function(txt) {
+  console.error(txt);
+}
+MockContext.prototype.log.verbose = function(txt) {
+  console.debug(txt);
+}
+
+const mockContext = new MockContext();
+
+
 describe('csv2json', () => {
     it('works with twin without properties', async () => {
         testValue = '"$metadata.$model","$id"\n'
             +       '"modelName","instanceId"';
         mockMessages = [];
         
-        function mockContext() {};
-        mockContext.prototype.log = function(txt) {
-          console.log(txt);
-        };
-        mockContext.prototype.log.warn = function(txt) {
-          console.warn(txt);
-        }
-        mockContext.prototype.log.error = function(txt) {
-          console.error(txt);
-        }
-        mockContext.prototype.log.verbose = function(txt) {
-          console.debug(txt);
-        }
-
-var context = new mockContext();
-        function log(txt) {
-          this.warn = function(txt) {};
-          this.error = function(txt) {};
-          this.verbose = function(txt) {};
-        }
-        function mockContext() {
-          log: new log()
-        };
-
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -57,7 +50,6 @@ var context = new mockContext();
             +       '"modelName","instanceOne"\n'
             +       '"modelName","instanceTwo"';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -79,7 +71,6 @@ var context = new mockContext();
         testValue = '"$metadata.$model","$id",answer\n'
             +       '"modelName","instanceId",42';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -98,7 +89,6 @@ var context = new mockContext();
         testValue = '"$metadata.$model","$id",e\n'
             +       '"modelName","instanceId",2.71828';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -117,7 +107,6 @@ var context = new mockContext();
         testValue = '"$metadata.$model","$id","eeny.meenie.miney.moe"\n'
             +       '"modelName","instanceId","catch a tiger by the toe"';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -136,7 +125,6 @@ var context = new mockContext();
         testValue = '"$sourceId","$targetId","$relationshipId","$relationshipName"\n'
             +       '"sourceId","targetId","sourceId-relation-targetId","relationName"';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -158,7 +146,6 @@ var context = new mockContext();
         testValue = '"$sourceId","$targetId","$relationshipId","$relationshipName","property1","nested.property"\n'
             +       '"sourceId","targetId","sourceId-relation-targetId","relationName",3.14159,"value"';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
@@ -179,7 +166,6 @@ var context = new mockContext();
             +       '"sourceId","targetId","sourceId-relation-targetId","relationName",3.14159,"value"\n'
             +       '"sourceId2","targetId2","sourceId-relation-targetId2","relationName2", 2.71828,"value2"';
         mockMessages = [];
-        mockContext = {};
         QueueClient.mockImplementation((_, __) => {
             return {
                 createIfNotExists: jest.fn(),
