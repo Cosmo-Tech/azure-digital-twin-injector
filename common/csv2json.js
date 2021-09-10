@@ -34,6 +34,7 @@ function logDetails(str) {
 
 module.exports.csv2json = async function(context, csvData) {
   context.log('Running csv2json...');
+  context.warning('Starting CSV to JSON conversion and send to Queue');
   const queueClient = new QueueClient(
       process.env.JSON_STORAGE_CONNECTION,
       process.env.JSON_STORAGE_QUEUE,
