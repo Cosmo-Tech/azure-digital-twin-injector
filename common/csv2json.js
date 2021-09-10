@@ -19,6 +19,7 @@ const sleep = (ms) => {
 const batchCountSize = 200;
 const batchWaitMs = 3000;
 
+https.globalAgent.maxSockets = 500;
 
 /**
  * Log detailed information on parsing
@@ -34,7 +35,11 @@ module.exports.csv2json = async function(context, csvData) {
   context.log('Running csv2json...');
   const queueClient = new QueueClient(
       process.env.JSON_STORAGE_CONNECTION,
-      process.env.JSON_STORAGE_QUEUE);
+      process.env.JSON_STORAGE_QUEUE,
+      {
+        keepAliveOptions: { enable: false }
+      }
+  );
   context.log.verbose(`Queue client: ${process.env.JSON_STORAGE_QUEUE}`);
   context.log.verbose('Queue: create if not exist');
   queueClient.createIfNotExists();
@@ -85,7 +90,7 @@ module.exports.csv2json = async function(context, csvData) {
               });
         }
 
-        if (batchCount >= batchCountSize) {
+        /*if (batchCount >= batchCountSize) {
           context.log(`Waiting ${batchWaitMs} ms for next queue batch...`);
           parser.pause();
           (async () => {
@@ -95,9 +100,9 @@ module.exports.csv2json = async function(context, csvData) {
             parser.resume();
             sendMessage(content);
           })();
-        } else {
+        } else {*/
           sendMessage(content);
-        }
+        /*}*/
       }
     },
     error: function(err, file, inputElem, reason) {
