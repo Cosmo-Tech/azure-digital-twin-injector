@@ -13,6 +13,8 @@
 
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
+var https = require('https');
+
 const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
