@@ -16,7 +16,9 @@ digital twin. The last two function, `blobwatcher` and `insertcsv` are
 frontends for csv2json (respectively blob triggered and http triggered).
 
 # Change log
-
+## 0.0.2
+* No more batch window to send messages to Queue
+  => use nodejs https max sockets & disable Queue client keep alive
 ## 0.0.1
 * send Azure storage queue messages by batch and wait to avoid max outbound connections
 * handle papaparse error & complete callbacks
