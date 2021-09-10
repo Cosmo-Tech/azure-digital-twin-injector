@@ -21,7 +21,7 @@ const sleep = (ms) => {
 const batchCountSize = 200;
 const batchWaitMs = 3000;
 
-https.globalAgent.maxSockets = 500;
+https.globalAgent.maxSockets = 200;
 
 /**
  * Log detailed information on parsing
