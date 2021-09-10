@@ -13,14 +13,13 @@
 
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
-var https = require('https');
+const https = require('https');
 
-const sleep = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
-const batchCountSize = 200;
-const batchWaitMs = 3000;
-
+/* Limit the number of outbound connections to 200
+ *   (higher value of 500 does not work).
+ * Works with option to disable keep alive on client further.
+ * https://github.com/Azure/azure-functions-host/wiki/Host-Health-Monitor
+ */
 https.globalAgent.maxSockets = 200;
 
 /**
@@ -39,8 +38,8 @@ module.exports.csv2json = async function(context, csvData) {
       process.env.JSON_STORAGE_CONNECTION,
       process.env.JSON_STORAGE_QUEUE,
       {
-        keepAliveOptions: { enable: false }
-      }
+        keepAliveOptions: {enable: false},
+      },
   );
   context.log.verbose(`Queue client: ${process.env.JSON_STORAGE_QUEUE}`);
   context.log.verbose('Queue: create if not exist');
@@ -92,19 +91,7 @@ module.exports.csv2json = async function(context, csvData) {
               });
         }
 
-        /*if (batchCount >= batchCountSize) {
-          context.log(`Waiting ${batchWaitMs} ms for next queue batch...`);
-          parser.pause();
-          (async () => {
-            context.log('Resuming parer & sending message');
-            await sleep(batchWaitMs);
-            batchCount = 0;
-            parser.resume();
-            sendMessage(content);
-          })();
-        } else {*/
-          sendMessage(content);
-        /*}*/
+        sendMessage(content);
       }
     },
     error: function(err, file, inputElem, reason) {
