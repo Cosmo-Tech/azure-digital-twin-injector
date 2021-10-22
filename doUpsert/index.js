@@ -38,7 +38,7 @@ module.exports = async function(context, jsonItem) {
           jsonItem.$relationshipId, jsonItem)
           .catch((e) => {
             context.log.error(`relationship ${jsonItem.$relationshipId}
-              on source ${jsonItem.$sourceId} insertion failed: ${e}`);
+              on source ${jsonItem.$sourceId} insertion failed: `, e);
             const err = `failed relationship: ${jsonString}`;
             throw err;
           });
@@ -52,7 +52,7 @@ module.exports = async function(context, jsonItem) {
       context.log.verbose('calling ADT twin API');
       await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
           .catch((e) => {
-            context.log.error(`twin ${jsonItem.$id} insertion failed: ${e}`);
+            context.log.error(`twin ${jsonItem.$id} insertion failed: `, e);
             const err = `failed twin: ${jsonString}`;
             throw err;
           });
