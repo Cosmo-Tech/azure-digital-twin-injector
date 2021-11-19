@@ -76,20 +76,20 @@ for instance given the following twin model:
 }
 ```
 
-you may inject twins matching this model using the following CSV file:
+You may inject twins matching this model using the following CSV file:
 
 | `"$metadata.$model"`          | `"$id"`        | `"color"` | `"position.x"` | `"position.y"` |
 | ----------------------------- | -------------- | --------- | -------------- | -------------- |
 | `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   | `25.3`         | `42.0`         |
 
-To insert relation `dt-injestor` expects the folowing columns:
+Inserting relationships with `dt-injector` requires the following columns:
 
 | `"$sourceId"` | `"$targetId"` | `"$relationshipId"` | `"$relationshipName"` | `"property1"` | `"property..."` |
 | ------------- | ------------- | ------------------- | --------------------- | ------------- | --------------- |
 
 # Configuration
 
-dt-injector canbe configured using the following settings:
+dt-injector can be configured using the following settings:
 
 | **Application settings**       |                                                                                                     |
 | ------------------------------ | --------------------------------------------------------------------------------------------------- |
@@ -99,10 +99,10 @@ dt-injector canbe configured using the following settings:
 | CSV_STORAGE_CONTAINER          | name of the container where new csv are read by the http trigger                                    |
 | JSON_STORAGE_CONNECTION        | connection string for the storage account hosting the input csv file container                      |
 | JSON_STORAGE_QUEUE             | name of the queue linking the two functions                                                         |
-| DIGITAL_TWINS_URL               | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
+| DIGITAL_TWINS_URL              | https://digitaltwin24876.api.weu.digitaltwins.azure.net                                             |
 
 
-an example `local.settings.json` is provided in the repository. In addition,
+An example `local.settings.json` is provided in the repository. In addition,
 The Function App [managed
 idendity](https://docs.microsoft.com/en-us/azure/app-service/overview-managed-identity?tabs=javascript)
 must be assigned the role of `Azure Digital Twins Data Owner` in the target
