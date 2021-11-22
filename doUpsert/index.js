@@ -35,7 +35,8 @@ module.exports = async function(context, jsonItem) {
       context.log.verbose('calling ADT relationship API');
       await digitalTwin.upsertRelationship(
           jsonItem.$sourceId,
-          jsonItem.$relationshipId, jsonItem)
+          jsonItem.$relationshipId,
+          jsonItem.relationship)
           .catch((e) => {
             context.log.error(`relationship ${jsonItem.$relationshipId}
               on source ${jsonItem.$sourceId} insertion failed: `, e);

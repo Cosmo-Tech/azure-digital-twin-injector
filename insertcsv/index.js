@@ -7,7 +7,7 @@
  * It's only an http entry point for csv2json.
  */
 
-const {csv2json} = require('../common/csv2json');
+const {csv2json, send2queue, queueClient} = require('../common/csv2json');
 
 module.exports = async function(context, req) {
   context.log('insertcsv function triggered');

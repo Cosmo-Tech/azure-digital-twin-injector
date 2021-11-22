@@ -2,8 +2,10 @@
  * copyright (c) cosmo tech corporation.
  * licensed under the mit license.
  *
- * This module reads CSV data line by line,
- * convert the line to JSON and store it in an Azure Storate Queue.
+ * This module exports 2 functions:
+ * csv2json: that reads CSV data line by line and convert it to json
+ * send2queue: that store inoformation in an Azure Storage Queue
+ *
  * Inserting to the queue is batched and timedout in order to respect
  * Azure Function limits on max outbound connections.
  * https://docs.microsoft.com/en-us/azure/azure-functions/functions-scale#service-limits
@@ -14,6 +16,7 @@
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
 const https = require('https');
+
 
 /* Limit the number of outbound connections to 200
  *   (higher value of 500 does not work).
@@ -26,84 +29,145 @@ https.globalAgent.maxSockets = 200;
  * Log detailed information on parsing
  * @param {string} str text to log
  */
-function logDetails(str) {
-  if (process.env.LOG_DETAILS) {
-    context.log.verbose(str);
-  }
+function detailsLog(str) {
+    if (process.env.LOG_DETAILS) {
+        context.log.verbose(str);
+    }
 }
 
-module.exports.csv2json = async function(context, csvData) {
-  context.log('Running csv2json...');
-  context.log.warn('Starting CSV to JSON conversion and send to Queue');
-  const queueClient = new QueueClient(
-      process.env.JSON_STORAGE_CONNECTION,
-      process.env.JSON_STORAGE_QUEUE,
-      {
+
+
+/**
+ * Queue configuration from env variables
+ * See under Settings / Configuration
+ */
+const queueClient = new QueueClient(
+    process.env.JSON_STORAGE_CONNECTION,
+    process.env.JSON_STORAGE_QUEUE,
+    {
         keepAliveOptions: {enable: false},
-      },
-  );
-  context.log.verbose(`Queue client: ${process.env.JSON_STORAGE_QUEUE}`);
-  context.log.verbose('Queue: create if not exist');
-  queueClient.createIfNotExists();
-  context.log('Parsing CSV data...');
-  let count = 0;
-  let cumulatedIds = '';
-  let batchCount = 0;
-  Papa.parse(csvData.toString('utf8'), {
-    header: true,
-    dynamicTyping: true,
-    step: function(results, parser) {
-      logDetails('Parser step');
-      /* eslint-disable */
-      let content = {};
-      /* eslint-enable */
-      logDetails('Iterating results data');
-      logDetails(`Results data: ${JSON.stringify(results.data)}`);
-      if (Object.keys(results.data).length == 1) {
-        context.log.warn(`CSV parsed object with only 1 property: ignored.
-        Certainly a blank line`);
-      } else {
-        cumulatedIds = `${cumulatedIds},${results.data.$id}`;
-        count = count + 1;
-        batchCount = batchCount + 1;
-        for (const key in results.data) {
-          if (results.data.hasOwnProperty(key)) {
-            key.split('.').reduce((acc, e, i, arr) => {
-              const returnVal = (i === arr.length - 1) ?
-                (acc[e.toString()] = results.data[key]) :
-                acc[e.toString()] || (acc[e.toString()] = {});
-              logDetails(`Transformed data: ${returnVal}`);
-              return returnVal;
-            }, content);
-          }
-        }
+    },
+);
 
-        /**
-         * Send a message to the Azure Storage Queue
-         * @param {Object} content the object to send
-         */
-        function sendMessage(content) {
-          context.log.verbose('Sending message to queue');
-          queueClient.sendMessage(
-              Buffer.from(JSON.stringify(content)).toString('base64'))
-              .catch((e) => {
-                const err = `error sending message: ${e}`;
-                throw err;
-              });
-        }
 
-        sendMessage(content);
-      }
-    },
-    error: function(err, file, inputElem, reason) {
-      context.log.error(`Papaparse error: ${err}, file: ${file},
-        inputElem: ${inputElem}, reason: ${reason}`);
-      context.log.verbose(`Cumulated ids: ${cumulatedIds}`);
-      throw err;
-    },
-    complete: function() {
-      context.log(`Total sent messages: ${count.toString()}`);
-      context.log.verbose(`Cumulated ids: ${cumulatedIds}`);
-    },
-  });
+/**
+ * Transform a relationship object (just parsed from csv) to match expected DTDL data format
+ * @param {Object} relationship csv object
+ * @return {Object} relationship csv object to DTDL data format
+ */
+function relationshipCsvObject2DTDL(context, relationshipObject) {
+    context.log('Transforming relationship file...')
+    // Create relationshipID
+    relationshipObject['$relationshipId'] = relationshipObject['source'].concat('-', relationshipObject['target'])
+
+    // Mod source to $sourceId
+    relationshipObject['$sourceId'] = relationshipObject['source']
+    delete relationshipObject['source']
+
+    // Create relationship 
+    relationshipObject['relationship'] = {}
+    // Mod target to $targetId
+    relationshipObject['relationship']['$targetId'] = relationshipObject['target']
+    delete relationshipObject['target']
+
+    // Add $relationshipName ??
+    relationshipObject['relationship']['$relationshipName'] = context.bindingData.filename
+    return relationshipObject;
+}
+
+/**
+ * Transform a twin object (just parsed from csv) to match expected DTDL data format
+ * @param {Object} twin csv object
+ * @return {Object} twin csv object to DTDL data format
+ */
+function twinCsvObject2DTDL(context, twinObject) {
+    context.log('Transforming twin file...')
+    for (const k in twinObject) {
+        v = twinObject[k];
+        if (typeof(v) == 'string') {
+            // Specific condition for technical policy attributes CriteriaFormula
+            // Avoid truning stringed json back to json
+            // TODO: Check expected type from dtdl before
+            if (k != 'CriteriaFormula' && v.includes('{')) {
+                // Mod stringed map/object back to origin form
+                twinObject[k] = JSON.parse(v);
+            } else if (/[+-]?\d(\.\d+)?[Ee][+-]?\d+/.test(v)) {
+                // Mod stringed scientific notation float back to float.
+                twinObject[k] = Number(v);
+            }
+        } else if(v === null) {
+            delete twinObject[k];
+        }
+    }
+    // Add ADT model ref
+    twinObject["$metadata"] = {"$model": `dtmi:${context.bindingData.filename};1`};  
+    // Mod id to be DTDL ref $id
+    twinObject["$id"] = twinObject["id"]
+    delete twinObject["id"]
+    console.log(twinObject);
+    return twinObject;
+}
+
+/**
+ * Send a message to the Azure Storage Queue
+ * @param {Object} content the object to send
+ */
+function send2queue(context, content) {
+    context.log.verbose(`Queue client: ${process.env.JSON_STORAGE_QUEUE}`);
+    context.log.verbose('Queue: create if not exist');
+    queueClient.createIfNotExists();
+
+    context.log('Sending message to queue');
+    queueClient.sendMessage(
+        Buffer.from(JSON.stringify(content)).toString('base64'))
+        .catch((e) => {
+            const err = `error sending message: ${e}`;
+            throw err;
+        });
+}
+
+
+async function csv2json(context, csvData) {
+    filename = context.bindingData.filename;
+    context.log(`Running csv2json on ${filename}...`);
+    context.log('Parsing CSV data...');
+    let count = 0;
+    let cumulatedIds = '';
+    Papa.parse(csvData.toString('utf8'), {
+        header: true,
+        dynamicTyping: true,
+        skipEmptyLines: 'greedy',
+        step: function(results, parser) {
+            context.log('Parser step');
+            context.log.verbose('Iterating results data');
+            context.log.verbose(`Results data: ${JSON.stringify(results.data)}`);
+            cumulatedIds = `${cumulatedIds},${results.data.$id}`;
+            ++count;
+            // Discriminate twins from relations
+            // TODO: Find other way to discriminate
+            if (JSON.stringify(results.meta.fields) === JSON.stringify(['source', 'target'])) {
+                results.data = relationshipCsvObject2DTDL(context, results.data)
+            } else {
+                results.data = twinCsvObject2DTDL(context, results.data)
+            }
+            send2queue(context, results.data);
+        },
+        error: function(err, file, inputElem, reason) {
+            context.log.error(`Papaparse error: ${err}, file: ${file},
+                inputElem: ${inputElem}, reason: ${reason}`);
+            context.log.verbose(`Cumulated ids: ${cumulatedIds}`);
+            throw err;
+        },
+        complete: function() {
+            context.log(`Total sent messages: ${count.toString()}`);
+            context.log.verbose(`Cumulated ids: ${cumulatedIds}`);
+        },
+    });
 };
+
+
+module.exports = {
+    csv2json: csv2json, 
+    send2queue: send2queue, 
+    queueClient: queueClient
+}
