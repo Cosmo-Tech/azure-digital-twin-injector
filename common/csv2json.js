@@ -25,17 +25,6 @@ const https = require('https');
  */
 https.globalAgent.maxSockets = 200;
 
-/**
- * Log detailed information on parsing
- * @param {string} str text to log
- */
-function detailsLog(str) {
-    if (process.env.LOG_DETAILS) {
-        context.log.verbose(str);
-    }
-}
-
-
 
 /**
  * Queue configuration from env variables
@@ -57,23 +46,35 @@ const queueClient = new QueueClient(
  */
 function relationshipCsvObject2DTDL(context, relationshipObject) {
     context.log('Transforming relationship file...')
+    if (!('source' in relationshipObject) || relationshipObject['source'] === null)
+        throw `relationship object from ${context.bindingData.filename} doesn't contains source`;
+    if (!('target' in relationshipObject) || relationshipObject['target'] === null)
+        throw `relationship object from ${context.bindingData.filename} doesn't contains target`;
+
+    newRelationshipObject = {}
     // Create relationshipID
-    relationshipObject['$relationshipId'] = relationshipObject['source'].concat('-', relationshipObject['target'])
+    newRelationshipObject['$relationshipId'] = relationshipObject['source'].concat('-', relationshipObject['target'])
 
     // Mod source to $sourceId
-    relationshipObject['$sourceId'] = relationshipObject['source']
+    newRelationshipObject['$sourceId'] = relationshipObject['source']
     delete relationshipObject['source']
 
     // Create relationship 
-    relationshipObject['relationship'] = {}
+    newRelationshipObject['relationship'] = {}
     // Mod target to $targetId
-    relationshipObject['relationship']['$targetId'] = relationshipObject['target']
+    newRelationshipObject['relationship']['$targetId'] = relationshipObject['target']
     delete relationshipObject['target']
 
-    // Add $relationshipName ??
-    relationshipObject['relationship']['$relationshipName'] = context.bindingData.filename
-    return relationshipObject;
+    // Add $relationshipName
+    newRelationshipObject['relationship']['$relationshipName'] = context.bindingData.filename
+
+    // Add the rest of relationship json to relationship attributes
+    for (const k in relationshipObject) {
+        newRelationshipObject['relationship'][k] = relationshipObject[k];
+    }
+    return newRelationshipObject;
 }
+
 
 /**
  * Transform a twin object (just parsed from csv) to match expected DTDL data format
@@ -82,6 +83,8 @@ function relationshipCsvObject2DTDL(context, relationshipObject) {
  */
 function twinCsvObject2DTDL(context, twinObject) {
     context.log('Transforming twin file...')
+    if (!('id' in twinObject) || twinObject['id'] === null)
+        throw `Twin object from ${context.bindingData.filename} doesn't contains id`;
     for (const k in twinObject) {
         v = twinObject[k];
         if (typeof(v) == 'string') {
@@ -104,9 +107,9 @@ function twinCsvObject2DTDL(context, twinObject) {
     // Mod id to be DTDL ref $id
     twinObject["$id"] = twinObject["id"]
     delete twinObject["id"]
-    console.log(twinObject);
     return twinObject;
 }
+
 
 /**
  * Send a message to the Azure Storage Queue
@@ -116,8 +119,8 @@ function send2queue(context, content) {
     context.log.verbose(`Queue client: ${process.env.JSON_STORAGE_QUEUE}`);
     context.log.verbose('Queue: create if not exist');
     queueClient.createIfNotExists();
-
     context.log('Sending message to queue');
+    context.log.verbose(content)
     queueClient.sendMessage(
         Buffer.from(JSON.stringify(content)).toString('base64'))
         .catch((e) => {
@@ -169,5 +172,7 @@ async function csv2json(context, csvData) {
 module.exports = {
     csv2json: csv2json, 
     send2queue: send2queue, 
+    twinCsvObject2DTDL: twinCsvObject2DTDL,
+    relationshipCsvObject2DTDL: relationshipCsvObject2DTDL,
     queueClient: queueClient
 }
