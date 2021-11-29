@@ -13,6 +13,8 @@
  * Throws exception if there are parsing errors or issues sending to queue.
  */
 
+const {DigitalTwinsClient} = require('@azure/digital-twins-core');
+const {DefaultAzureCredential} = require('@azure/identity');
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
 const https = require('https');
@@ -40,17 +42,79 @@ const queueClient = new QueueClient(
 
 
 /**
+ * Retreive model schema from ADT
+ * @param {String} Model id at DTDL format
+ * @return {Object} Map of all property as keys and expected type as values
+ */
+function extractSchemaDataType(context, modelId) {
+    context.log('reading DTDL schema for type detection')
+    let modelId = `dtmi:${context.bindingData.filename};1`
+    context.log.verbose('creating ADT client');
+    const digitalTwin = new DigitalTwinsClient(
+        process.env.DIGITAL_TWINS_URL,
+        new DefaultAzureCredential());
+    modelSchema = await digitalTwin.getModel(modelId, true)
+        .catch((e) => {
+            context.log.error(`Error occured while retreving model of ${modelId}\n${e.message}`);
+            throw e;
+        });
+    console.log(modelSchema)
+    propertiesDataType = {}
+    for (const c in modelSchema.contents) {
+        if (c['@type'] == 'Property') {
+            // TODO extract expected type from model and match to json type
+            // return map <name,type>
+        }
+    }
+}
+
+
+/**
+ * Transform a relationship object with keys matching expected DTDL data format
+ * @param {object} relationship csv object
+ * @return {object} relation csv object at DTDL data format
+ */
+function relationshipDirectTransform(context, relationshipObject) {
+    if (!('$relationshipId' in results.meta.fields)) {
+        m = 'Missing $relationshipId';
+        context.log.error(m);
+        throw m;
+    } else if (!('$target' in results.meta.fields)) {
+        m = 'Missing $target';
+        context.log.error(m);
+        throw m;
+    } else if (!('$relationshipName' in results.meta.fields)) {
+        m = 'Missing $relationshipName';
+        context.log.error(m);
+        throw m;
+    }
+
+    context.log('Direct Transforming relationship file...')
+    newRelationshipObject = {};
+    newRelationshipObject['$sourceId'] = relationshipObject['$sourceId'];
+    newRelationshipObject['$targetId'] = relationshipObject['$targetId'];
+    
+    delete relationshipObject['$sourceId'];
+    delete relationshipObject['$targetId'];
+
+    newRelationshipObject['relationship'] = relationshipObject;
+
+    return newRelationshipObject;
+}
+
+
+/**
  * Transform a relationship object (just parsed from csv) to match expected DTDL data format
  * @param {Object} relationship csv object
- * @return {Object} relationship csv object to DTDL data format
+ * @return {Object} relationship csv object at DTDL data format
  */
 function relationshipCsvObject2DTDL(context, relationshipObject) {
-    context.log('Transforming relationship file...')
     if (!('source' in relationshipObject) || relationshipObject['source'] === null)
         throw `relationship object from ${context.bindingData.filename} doesn't contains source`;
     if (!('target' in relationshipObject) || relationshipObject['target'] === null)
         throw `relationship object from ${context.bindingData.filename} doesn't contains target`;
 
+    context.log('Transforming relationship file...')
     newRelationshipObject = {}
     // Create relationshipID
     newRelationshipObject['$relationshipId'] = relationshipObject['source'].concat('-', relationshipObject['target'])
@@ -77,14 +141,34 @@ function relationshipCsvObject2DTDL(context, relationshipObject) {
 
 
 /**
+ * Transform a twin object with keys matching expected DTDL data format
+ * @param {object} twin csv object
+ * @return {object} twin csv object at DTDL data format
+ */
+function twinDirectTranform(context, twinObject) {
+    if (!('$metadata.$model' in results.meta.fields)) {
+        context.log.error('Missing $metadata.$model; For twinDirectTransform $id et $metadata.$model are mandatory');
+        throw 'Missing $metadata.$model';
+    }
+
+    context.log('Direct transforming twin file...');
+    twinObject["$metadata"] = {"$model": twinObject['$metadata.$model']};  
+    delete twinObject['$metadata.$model'] ;
+
+    return twinObject;
+}
+
+
+/**
  * Transform a twin object (just parsed from csv) to match expected DTDL data format
  * @param {Object} twin csv object
  * @return {Object} twin csv object to DTDL data format
  */
-function twinCsvObject2DTDL(context, twinObject) {
-    context.log('Transforming twin file...')
+async function twinCsvObject2DTDL(context, twinObject) {
     if (!('id' in twinObject) || twinObject['id'] === null)
         throw `Twin object from ${context.bindingData.filename} doesn't contains id`;
+
+    context.log('Transforming twin file...')
     for (const k in twinObject) {
         v = twinObject[k];
         if (typeof(v) == 'string') {
@@ -103,7 +187,7 @@ function twinCsvObject2DTDL(context, twinObject) {
         }
     }
     // Add ADT model ref
-    twinObject["$metadata"] = {"$model": `dtmi:${context.bindingData.filename};1`};  
+    twinObject["$metadata"] = {"$model": modelId};  
     // Mod id to be DTDL ref $id
     twinObject["$id"] = twinObject["id"]
     delete twinObject["id"]
@@ -147,11 +231,15 @@ async function csv2json(context, csvData) {
             cumulatedIds = `${cumulatedIds},${results.data.$id}`;
             ++count;
             // Discriminate twins from relations
-            // TODO: Find other way to discriminate
-            if (JSON.stringify(results.meta.fields) === JSON.stringify(['source', 'target'])) {
-                results.data = relationshipCsvObject2DTDL(context, results.data)
+            // TODO: Find an other way to discriminate
+            if ('$id' in results.meta.fields) {
+                results.data = twinDirectTransform(context, results.data)
+            } else if ('$source' in results.meta.fiels) {
+                results.data = relationshipDirectTranform(context, results.data);
+            } else if (JSON.stringify(results.meta.fields) === JSON.stringify(['source', 'target'])) {
+                results.data = relationshipCsvObject2DTDL(context, results.data);
             } else {
-                results.data = twinCsvObject2DTDL(context, results.data)
+                results.data = twinCsvObject2DTDL(context, results.data);
             }
             send2queue(context, results.data);
         },
