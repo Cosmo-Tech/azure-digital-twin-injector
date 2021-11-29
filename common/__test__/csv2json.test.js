@@ -1,30 +1,6 @@
-const { twinCsvObject2DTDL, relationshipCsvObject2DTDL, csv2json} = require('../csv2json');
+const { twinDirectTransform, twinCsvObject2DTDL, relationshipDirectTransform, relationshipCsvObject2DTDL, csv2json} = require('../csv2json');
 const { QueueClient } = require('@azure/storage-queue');
 
-//process.env.JSON_STORAGE_CONNECTION = '';
-//process.env.JSON_STORAGE_QUEUE = '';
-//jest.mock('@azure/storage-queue', () => ({
-//    QueueClient.mockImplementation((_, __) => {
-//        return {
-//            createIfNotExists: jest.fn(),
-//            sendMessage: jest.fn().mockImplementation((str) => {
-//                mockMessages.push(JSON.parse(Buffer.from(str, 'base64').toString()));
-//                return new Promise(() => {});
-//            }),
-//        }
-//    })
-//}));
-
-
-//jest.mock('../csv2json');
-//
-//const queueClient = new QueueClient(
-//    process.env.JSON_STORAGE_CONNECTION,
-//    process.env.JSON_STORAGE_QUEUE,
-//    {
-//        keepAliveOptions: {enable: false},
-//    },
-//);
 
 function MockContext() {};
 MockContext.prototype.log = function(txt) {
@@ -37,7 +13,7 @@ MockContext.prototype.log.error = function(txt) {
   console.error(txt);
 };
 MockContext.prototype.log.verbose = function(txt) {
-  console.debug(txt);
+  // console.debug(txt);
 };
 MockContext.prototype.bindingData = {};
 const mockContext = new MockContext();
@@ -48,8 +24,8 @@ function objectHasKey(actual, expected) {
     result.pass = (expected in actual);
     result.message = function() {
         if (result.pass)
-            return `Expected ${expected} is in ${JSON.stringify(actual)}`;
-        return `Expected ${expected} is NOT in ${JSON.stringify(actual)}`;
+            return `Expected value ${expected} is in ${JSON.stringify(actual)}`;
+        return `Expected value ${expected} is NOT in ${JSON.stringify(actual)}`;
     }
     return result;
 }
@@ -61,12 +37,45 @@ jasmine.addMatchers({
 
 
 
+/**
+ * Test twinDirectTransform
+ */
+describe('twinDirectTransform', function() {
+    beforeEach(function() {
+        twinObject = {'$metadata.$model': 'dtmi:test_dtmi;1', '$id': 'test_id'}
+    });
 
+    test('Transform parsed twin data at dtdl format to match dtdl object', function() {
+        r = twinDirectTransform(mockContext, twinObject);
+
+        expect(r).toIncludeKey('$id');
+        expect(r['$id']).toEqual('test_id');
+        expect(r).toIncludeKey('$metadata');
+        expect(r['$metadata']).toIncludeKey('$model');
+        expect(r['$metadata']['$model']).toEqual('dtmi:test_dtmi;1');
+    });
+    test('Throw when Missing $id key', function() {
+        delete twinObject['$id'];
+
+        expect(() => {twinDirectTransform(mockContext, twinObject)}).toThrow();
+    });
+    test('Throw when missing $metadata.$model key', function() {
+        delete twinObject['$metadata.$model'];
+
+        expect(() => {twinDirectTransform(mockContext, twinObject)}).toThrow();
+    });
+});
+
+
+/**
+ *  Test TwinCsvObject2DTDL
+ */
 describe('twinCsvObject2DTDL', function() {
     beforeEach(function() {
         // init data
         twinObject = {'id': 'test_id'};
         mockContext.bindingData.filename = 'test_filename';
+        mockContext.bindingData.version = '1';
     });
 
     test('Transform parse twin data to match dtdl format', function() {
@@ -78,31 +87,70 @@ describe('twinCsvObject2DTDL', function() {
         expect(r['$metadata']).toIncludeKey('$model');
         expect(r['$metadata']['$model']).toEqual('dtmi:test_filename;1');
     });
-    test('throw error when missing id key', function() {
+    test('Throw when missing id key', function() {
         twinObject = {};
 
         expect(() => {twinCsvObject2DTDL(mockContext, twinObject)}).toThrow();
     });
-    test('throw error when id key is null', function() {
-        twinObject = {'id': null};
-        
-        expect(() => {twinCsvObject2DTDL(mockContext, twinObject)}).toThrow();
-    });
-    test('remove null attributes', function() {
-        twinObject['test_attribute'] = null;
-        
-        r = twinCsvObject2DTDL(mockContext, twinObject);
+});
 
-        expect(r).not.toContain('test_attribute');
+
+/**
+ * Test relationshipDirectTransform
+ */
+describe('relationshipDirectTransform', function() {
+    beforeEach(function() {
+        relationshipObject = {'$sourceId': 'source_id', 
+            '$targetId': 'target_id', 
+            '$relationshipId': 'relationship_id', 
+            '$relationshipName': 'relationship_name'}
+    });
+
+    test('Transform parsed relationship data at dtdl format to match dtdl object', function() {
+        r = relationshipDirectTransform(mockContext, relationshipObject);
+
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('relationship_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('relationship_name');
+    });
+    test('Throw when missing source key', function() {
+        delete relationshipObject['$sourceId']
+
+        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
+    });
+    test('Throw when missing source key', function() {
+        delete relationshipObject['$targetId']
+
+        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
+    });
+    test('Throw when missing source key', function() {
+        delete relationshipObject['$relationshipId']
+
+        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
+    });
+    test('Throw when missing source key', function() {
+        delete relationshipObject['$relationshipName']
+
+        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
     });
 });
 
 
+/**
+ * Test relationshipCsvObject2DTDL
+ */
 describe('relationshipCsvObject2DTDL', function() {
     beforeEach(function() {
         // init data
         relationshipObject = {'source': 'source_id', 'target': 'target_id'};
         mockContext.bindingData.filename = 'test_filename';
+        mockContext.bindingData.version = '1';
     });
 
     test('Transform parse relationship data to math dtdl format', function() {
@@ -120,12 +168,12 @@ describe('relationshipCsvObject2DTDL', function() {
         expect(r).not.toIncludeKey('source');
         expect(r).not.toIncludeKey('target');
     });
-    test('Throw error when missing source key', function() {
+    test('Throw when missing source key', function() {
         delete relationshipObject['source']
 
         expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
     });
-    test('Throw error when missing target key', function() {
+    test('Throw when missing target key', function() {
         delete relationshipObject['target']
 
         expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
@@ -158,11 +206,14 @@ jest.mock('@azure/storage-queue', () => ({
     })
 }));
 
-
+/**
+ * Test csv2json
+ */
 describe('csv2json', () => {
     beforeEach(function() {
         mockMessages = [];
         mockContext.bindingData.filename = 'test_filename';
+        mockContext.bindingData.version = '1';
     });
 
     test('Load a "relationship csv" type file', function() {
@@ -197,5 +248,30 @@ describe('csv2json', () => {
         expect(mockMessage).toIncludeKey('$metadata');
         expect(mockMessage['$metadata']).toIncludeKey('$model');
         expect(mockMessage['$metadata']['$model']).toEqual('dtmi:test_filename;1');
+    });
+    test('Use version from file name', function() {
+        mockContext.bindingData.version = '2';
+        csv = 'id\n'
+        +     'test_id';
+
+        csv2json(mockContext, csv)
+        
+        expect(mockMessages.length).toBe(1);
+        mockMessage = mockMessages[0];
+        expect(mockMessage).toIncludeKey('$id');
+        expect(mockMessage['$id']).toEqual('test_id');
+        expect(mockMessage).toIncludeKey('$metadata');
+        expect(mockMessage['$metadata']).toIncludeKey('$model');
+        expect(mockMessage['$metadata']['$model']).toEqual('dtmi:test_filename;2');
+    });
+    test('Remove null attributes', function() {
+        csv = 'id, test_attribute\n'
+        +     'test_id,';
+       
+        csv2json(mockContext, csv)
+
+        expect(mockMessages.length).toBe(1);
+        mockMessage = mockMessages[0];
+        expect(mockMessage).not.toIncludeKey('test_attribute');
     });
 });

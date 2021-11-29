@@ -4,7 +4,7 @@
       "name": "csvBlob",
       "type": "blobTrigger",
       "direction": "in",
-      "path": "%WATCHED_CSV_STORAGE_CONTAINER%/{filename}.csv",
+      "path": "%WATCHED_CSV_STORAGE_CONTAINER%/{filename}.v{version}.csv",
       "connection": "WATCHED_CSV_STORAGE_CONNECTION"
     }
   ]
