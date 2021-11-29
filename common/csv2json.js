@@ -68,87 +68,53 @@ function extractSchemaDataType(context, modelId) {
 
 
 /**
- * Transform a relationship object with keys matching expected DTDL data format
- * @param {object} relationship csv object
- * @return {object} relation csv object at DTDL data format
- */
-function relationshipDirectTransform(context, relationshipObject) {
-    if (!('$sourceId' in relationshipObject))
-        throw `Missing $sourceId key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-    if (!('$relationshipId' in relationshipObject))
-        throw `Missing $relationshipId key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-    if (!('$targetId' in relationshipObject))
-        throw `Missing $target key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-    if (!('$relationshipName' in relationshipObject))
-        throw `Missing $relationshipName key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-
-    context.log('Direct Transforming relationship file...')
-    newRelationshipObject = {};
-    newRelationshipObject['$sourceId'] = relationshipObject['$sourceId'];
-    newRelationshipObject['$relationshipId'] = relationshipObject['$relationshipId'];
-    
-    delete relationshipObject['$sourceId'];
-    delete relationshipObject['$relationshipId'];
-
-    newRelationshipObject['relationship'] = relationshipObject;
-
-    return newRelationshipObject;
-}
-
-
-/**
  * Transform a relationship object (just parsed from csv) to match expected DTDL data format
  * @param {Object} relationship csv object
  * @return {Object} relationship csv object at DTDL data format
  */
 function relationshipCsvObject2DTDL(context, relationshipObject) {
-    if (!('source' in relationshipObject))
-        throw `Missing source key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-    if (!('target' in relationshipObject))
-        throw `Missing target key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
+    if (!('source' in relationshipObject || '$sourceId' in relationshipObject))
+        throw `Missing source or $sourceId key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
+    if (!('target' in relationshipObject || '$targetId' in relationshipObject))
+        throw `Missing target or $targetId key in relationship object from ${context.bindingData.filename}.v${context.bindingData.version}`;
 
-    context.log('Transforming relationship file...')
-    newRelationshipObject = {}
-    // Create relationshipID 
-    newRelationshipObject['$relationshipId'] = relationshipObject['source'].concat('-', relationshipObject['target'])
-
-    // Mod source to $sourceId
-    newRelationshipObject['$sourceId'] = relationshipObject['source']
-    delete relationshipObject['source']
-
-    // Create relationship 
-    newRelationshipObject['relationship'] = {}
-    // Mod target to $targetId
-    newRelationshipObject['relationship']['$targetId'] = relationshipObject['target']
-    delete relationshipObject['target']
-
-    // Add $relationshipName
-    newRelationshipObject['relationship']['$relationshipName'] = context.bindingData.filename
-
-    // Add the rest of relationship json to relationship attributes
-    for (const k in relationshipObject) {
-        newRelationshipObject['relationship'][k] = relationshipObject[k];
+    context.log('Transforming relationship file...');
+    newRelationshipObject = {};
+    if (!('$sourceId' in relationshipObject)) {
+        newRelationshipObject['$sourceId'] = relationshipObject['source'];
+        delete relationshipObject['source'];
+    } else {
+        newRelationshipObject['$sourceId'] = relationshipObject['$sourceId'];
+        delete relationshipObject['$sourceId'];
     }
+
+    newRelationshipObject['relationship'] = {};
+    if (!('$targetId' in relationshipObject)) {
+        newRelationshipObject['relationship']['$targetId'] = relationshipObject['target'];
+        delete relationshipObject['target'];
+        console.log('remove target')
+    } else {
+        newRelationshipObject['relationship']['$targetId'] = relationshipObject['$targetId'];
+    }
+    if (!('$relationshipName' in relationshipObject)) {
+        newRelationshipObject['relationship']['$relationshipName'] = context.bindingData.filename;
+    } else {
+        newRelationshipObject['relationship']['$relationshipName'] = relationshipObject['$relationshipName'];
+    }
+
+    // $relationshipId creation is place here to be able to use newRelationshipObject['relationship']['$targetId']
+    if (!('$relationshipId' in relationshipObject)) {
+        newRelationshipObject['$relationshipId'] = newRelationshipObject['$sourceId'].concat('-', newRelationshipObject['relationship']['$targetId']);
+    } else {
+        newRelationshipObject['$relationshipId'] = relationshipObject['$relationshipId'];
+        delete relationshipObject['$relationshipId'];
+    }
+
+    // add remaining attributes to relationship object
+    for (const k in relationshipObject)
+        newRelationshipObject['relationship'][k] = relationshipObject[k]
+
     return newRelationshipObject;
-}
-
-
-/**
- * Transform a twin object with keys matching expected DTDL data format
- * @param {object} twin csv object
- * @return {object} twin csv object at DTDL data format
- */
-function twinDirectTransform(context, twinObject) {
-    if (!('$metadata.$model' in twinObject))
-        throw `Missing $metadata.$model key in twin object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-    if (!('$id' in twinObject))
-        throw `Missing $id key in twin object from ${context.bindingData.filename}.v${context.bindingData.version}`;
-
-    context.log('Direct transforming twin file...');
-    twinObject["$metadata"] = {"$model": twinObject['$metadata.$model']};  
-    delete twinObject['$metadata.$model'] ;
-
-    return twinObject;
 }
 
 
@@ -158,10 +124,9 @@ function twinDirectTransform(context, twinObject) {
  * @return {Object} twin csv object to DTDL data format
  */
 function twinCsvObject2DTDL(context, twinObject) {
-    if (!('id' in twinObject))
-        throw `Missing id key in twin object from ${context.bindingData.filename}.v${context.bindingData.version}`;
+    if (!('id' in twinObject || '$id' in twinObject))
+        throw `Missing id or $id key in twin object from ${context.bindingData.filename}.v${context.bindingData.version}`;
 
-    let modelId = `dtmi:${context.bindingData.filename};${context.bindingData.version}`
     context.log('Transforming twin file...')
     for (const k in twinObject) {
         v = twinObject[k];
@@ -179,10 +144,19 @@ function twinCsvObject2DTDL(context, twinObject) {
         }
     }
     // Add ADT model ref
-    twinObject["$metadata"] = {"$model": modelId};  
+
+    if (!('$metadata.$model' in twinObject)) {
+        let modelId = `dtmi:${context.bindingData.filename};${context.bindingData.version}`
+        twinObject["$metadata"] = {"$model": modelId};  
+    } else {
+        twinObject["$metadata"] = {"$model": twinObject['$metadata.$model']};  
+        delete twinObject['$metadata.$model'] ;
+    }
     // Mod id to be DTDL ref $id
-    twinObject["$id"] = twinObject["id"]
-    delete twinObject["id"]
+    if (!('$id' in twinObject)) {
+        twinObject["$id"] = twinObject["id"]
+        delete twinObject["id"]
+    }
     return twinObject;
 }
 
@@ -230,13 +204,9 @@ async function csv2json(context, csvData) {
             }
             // Discriminate twins from relations
             // TODO: Find an other way to discriminate
-            if (results.meta.fields.includes('$id')) {
-                results.data = twinDirectTransform(context, results.data)
-            } else if (results.meta.fields.includes('$source')) {
-                results.data = relationshipDirectTranform(context, results.data);
-            } else if (JSON.stringify(results.meta.fields) === JSON.stringify(['source', 'target'])) {
+            if (results.meta.fields.includes('source') || results.meta.fields.includes('$sourceId')) {
                 results.data = relationshipCsvObject2DTDL(context, results.data);
-            } else if (results.meta.fields.includes('id')) {
+            } else if (results.meta.fields.includes('id') || results.meta.fields.includes('$id')) {
                 results.data = twinCsvObject2DTDL(context, results.data);
             } else {
                 throw `Incorrect file format in ${filename}.v${version}.csv`
@@ -260,9 +230,7 @@ async function csv2json(context, csvData) {
 module.exports = {
     csv2json: csv2json, 
     send2queue: send2queue, 
-    twinDirectTransform: twinDirectTransform,
     twinCsvObject2DTDL: twinCsvObject2DTDL,
-    relationshipDirectTransform: relationshipDirectTransform,
     relationshipCsvObject2DTDL: relationshipCsvObject2DTDL,
     queueClient: queueClient
 }

@@ -1,4 +1,4 @@
-const { twinDirectTransform, twinCsvObject2DTDL, relationshipDirectTransform, relationshipCsvObject2DTDL, csv2json} = require('../csv2json');
+const { twinCsvObject2DTDL, relationshipCsvObject2DTDL, csv2json} = require('../csv2json');
 const { QueueClient } = require('@azure/storage-queue');
 
 
@@ -38,47 +38,17 @@ jasmine.addMatchers({
 
 
 /**
- * Test twinDirectTransform
- */
-describe('twinDirectTransform', function() {
-    beforeEach(function() {
-        twinObject = {'$metadata.$model': 'dtmi:test_dtmi;1', '$id': 'test_id'}
-    });
-
-    test('Transform parsed twin data at dtdl format to match dtdl object', function() {
-        r = twinDirectTransform(mockContext, twinObject);
-
-        expect(r).toIncludeKey('$id');
-        expect(r['$id']).toEqual('test_id');
-        expect(r).toIncludeKey('$metadata');
-        expect(r['$metadata']).toIncludeKey('$model');
-        expect(r['$metadata']['$model']).toEqual('dtmi:test_dtmi;1');
-    });
-    test('Throw when Missing $id key', function() {
-        delete twinObject['$id'];
-
-        expect(() => {twinDirectTransform(mockContext, twinObject)}).toThrow();
-    });
-    test('Throw when missing $metadata.$model key', function() {
-        delete twinObject['$metadata.$model'];
-
-        expect(() => {twinDirectTransform(mockContext, twinObject)}).toThrow();
-    });
-});
-
-
-/**
  *  Test TwinCsvObject2DTDL
  */
 describe('twinCsvObject2DTDL', function() {
-    beforeEach(function() {
-        // init data
-        twinObject = {'id': 'test_id'};
+    beforeAll(function() {
         mockContext.bindingData.filename = 'test_filename';
         mockContext.bindingData.version = '1';
     });
 
     test('Transform parse twin data to match dtdl format', function() {
+        twinObject = {'id': 'test_id'};
+
         r = twinCsvObject2DTDL(mockContext, twinObject);
         
         expect(r).toIncludeKey('$id');
@@ -86,6 +56,28 @@ describe('twinCsvObject2DTDL', function() {
         expect(r).toIncludeKey('$metadata');
         expect(r['$metadata']).toIncludeKey('$model');
         expect(r['$metadata']['$model']).toEqual('dtmi:test_filename;1');
+    });
+    test('Transform parse twin data at dtdl format to match dtdl format', function() {
+        twinObject = {'$id': 'test_id'};
+
+        r = twinCsvObject2DTDL(mockContext, twinObject);
+        
+        expect(r).toIncludeKey('$id');
+        expect(r['$id']).toEqual('test_id');
+        expect(r).toIncludeKey('$metadata');
+        expect(r['$metadata']).toIncludeKey('$model');
+        expect(r['$metadata']['$model']).toEqual('dtmi:test_filename;1');
+    });
+    test('Transform parse twin data format with modelId to match dtdl format', function() {
+        twinObject = {'$id': 'test_id', '$metadata.$model': 'dtmi:test_dtmi;1'};
+
+        r = twinCsvObject2DTDL(mockContext, twinObject);
+        
+        expect(r).toIncludeKey('$id');
+        expect(r['$id']).toEqual('test_id');
+        expect(r).toIncludeKey('$metadata');
+        expect(r['$metadata']).toIncludeKey('$model');
+        expect(r['$metadata']['$model']).toEqual('dtmi:test_dtmi;1');
     });
     test('Throw when missing id key', function() {
         twinObject = {};
@@ -96,64 +88,17 @@ describe('twinCsvObject2DTDL', function() {
 
 
 /**
- * Test relationshipDirectTransform
- */
-describe('relationshipDirectTransform', function() {
-    beforeEach(function() {
-        relationshipObject = {'$sourceId': 'source_id', 
-            '$targetId': 'target_id', 
-            '$relationshipId': 'relationship_id', 
-            '$relationshipName': 'relationship_name'}
-    });
-
-    test('Transform parsed relationship data at dtdl format to match dtdl object', function() {
-        r = relationshipDirectTransform(mockContext, relationshipObject);
-
-        expect(r).toIncludeKey('$relationshipId');
-        expect(r['$relationshipId']).toEqual('relationship_id');
-        expect(r).toIncludeKey('$sourceId');
-        expect(r['$sourceId']).toEqual('source_id');
-        expect(r).toIncludeKey('relationship');
-        expect(r['relationship']).toIncludeKey('$targetId');
-        expect(r['relationship']['$targetId']).toEqual('target_id');
-        expect(r['relationship']).toIncludeKey('$relationshipName');
-        expect(r['relationship']['$relationshipName']).toEqual('relationship_name');
-    });
-    test('Throw when missing source key', function() {
-        delete relationshipObject['$sourceId']
-
-        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
-    });
-    test('Throw when missing source key', function() {
-        delete relationshipObject['$targetId']
-
-        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
-    });
-    test('Throw when missing source key', function() {
-        delete relationshipObject['$relationshipId']
-
-        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
-    });
-    test('Throw when missing source key', function() {
-        delete relationshipObject['$relationshipName']
-
-        expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
-    });
-});
-
-
-/**
  * Test relationshipCsvObject2DTDL
  */
 describe('relationshipCsvObject2DTDL', function() {
-    beforeEach(function() {
-        // init data
-        relationshipObject = {'source': 'source_id', 'target': 'target_id'};
+    beforeAll(function() {
         mockContext.bindingData.filename = 'test_filename';
         mockContext.bindingData.version = '1';
     });
 
-    test('Transform parse relationship data to math dtdl format', function() {
+    test('Transform parse relationship data to match dtdl format', function() {
+        relationshipObject = {'source': 'source_id', 'target': 'target_id'};
+
         r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
         
         expect(r).toIncludeKey('$relationshipId');
@@ -168,19 +113,106 @@ describe('relationshipCsvObject2DTDL', function() {
         expect(r).not.toIncludeKey('source');
         expect(r).not.toIncludeKey('target');
     });
+    test('Transform parse relationship data with $sourceId to math dtdl format', function() {
+        relationshipObject = {'$sourceId': 'D_source_id', 'target': 'target_id'};
+
+        r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
+        
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('D_source_id-target_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('D_source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('test_filename');
+        expect(r).not.toIncludeKey('source');
+        expect(r).not.toIncludeKey('target');
+    });
+    test('Transform parse relationship data with $targetId to math dtdl format', function() {
+        relationshipObject = {'source': 'source_id', '$targetId': 'D_target_id'};
+
+        r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
+        
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('source_id-D_target_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('D_target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('test_filename');
+        expect(r).not.toIncludeKey('source');
+        expect(r).not.toIncludeKey('target');
+    });
+    test('Transform parse relationship data with $sourceId and $targetId to math dtdl format', function() {
+        relationshipObject = {'$sourceId': 'D_source_id', '$targetId': 'D_target_id'};
+
+        r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
+        
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('D_source_id-D_target_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('D_source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('D_target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('test_filename');
+        expect(r).not.toIncludeKey('source');
+        expect(r).not.toIncludeKey('target');
+    });
+    test('Transform parse relationship data with $relationshipId to math dtdl format', function() {
+        relationshipObject = {'source': 'source_id', 'target': 'target_id', '$relationshipId': 'D_relationship_id'};
+
+        r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
+        
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('D_relationship_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('test_filename');
+        expect(r).not.toIncludeKey('source');
+        expect(r).not.toIncludeKey('target');
+    });
+    test('Transform parse relationship data with $relationshipName to math dtdl format', function() {
+        relationshipObject = {'source': 'source_id', 'target': 'target_id', '$relationshipName': 'D_relationship_name'};
+
+        r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
+        
+        expect(r).toIncludeKey('$relationshipId');
+        expect(r['$relationshipId']).toEqual('source_id-target_id');
+        expect(r).toIncludeKey('$sourceId');
+        expect(r['$sourceId']).toEqual('source_id');
+        expect(r).toIncludeKey('relationship');
+        expect(r['relationship']).toIncludeKey('$targetId');
+        expect(r['relationship']['$targetId']).toEqual('target_id');
+        expect(r['relationship']).toIncludeKey('$relationshipName');
+        expect(r['relationship']['$relationshipName']).toEqual('D_relationship_name');
+        expect(r).not.toIncludeKey('source');
+        expect(r).not.toIncludeKey('target');
+    });
     test('Throw when missing source key', function() {
-        delete relationshipObject['source']
+        relationshipObject = {};
 
         expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
     });
     test('Throw when missing target key', function() {
-        delete relationshipObject['target']
+        relationshipObject = {'source': 'source_id'};
 
         expect(() => relationshipCsvObject2DTDL(mockContext, relationshipObject)).toThrow();
     });
     test('Add extra parsed attributes to new relationship attribute', function() {
-        relationshipObject['new_attribute1'] = 'value1';
-        relationshipObject['new_attribute2'] = 'value2';
+        relationshipObject = {'source': 'source_id', 
+            'target': 'target_id',
+            'new_attribute1': 'value1',
+            'new_attribute2': 'value2'};
 
         r = relationshipCsvObject2DTDL(mockContext, relationshipObject);
 
