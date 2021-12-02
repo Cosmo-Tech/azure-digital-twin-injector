@@ -40,8 +40,9 @@ frontends for csv2json (respectively blob triggered and http triggered).
 
 The injector is triggered by uploading a CSV file to an azure storage
 container and expects the following columns for twins:
- - `$metadata.$model`: The model id of the twin,
- - `$id`: The id of the twin,
+ - `$metadata.$model`: The model id of the twin;
+ - `$id`: The id of the twin;
+ - `$entityDelete`: If true, the twin is deleted, if false the twin is upserted;
  - one column for each property or telemetry, with complex properties
    flattened with dot-spearated headers.
 for instance given the following twin model:
@@ -78,14 +79,14 @@ for instance given the following twin model:
 
 You may inject twins matching this model using the following CSV file:
 
-| `"$metadata.$model"`          | `"$id"`        | `"color"` | `"position.x"` | `"position.y"` |
-| ----------------------------- | -------------- | --------- | -------------- | -------------- |
-| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   | `25.3`         | `42.0`         |
+| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position.x"` | `"position.y"` |
+| ----------------------------- | -------------- | ----------------- | --------- | -------------- | -------------- |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"false"`         | `"red"`   | `25.3`         | `42.0`         |
 
 Inserting relationships with `dt-injector` requires the following columns:
 
-| `"$sourceId"` | `"$targetId"` | `"$relationshipId"` | `"$relationshipName"` | `"property1"` | `"property..."` |
-| ------------- | ------------- | ------------------- | --------------------- | ------------- | --------------- |
+| `"$sourceId"` | `"$targetId"` | `"$relationshipId"` | `"$relationshipName"` | `"$relationshipDelete"` | `"property1"` | `"property..."` |
+| ------------- | ------------- | ------------------- | --------------------- | ----------------------- | ------------- | --------------- |
 
 # Configuration
 
