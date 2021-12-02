@@ -13,8 +13,6 @@
  * Throws exception if there are parsing errors or issues sending to queue.
  */
 
-const {DigitalTwinsClient} = require('@azure/digital-twins-core');
-const {DefaultAzureCredential} = require('@azure/identity');
 const {QueueClient} = require('@azure/storage-queue');
 const Papa = require('papaparse');
 const https = require('https');
@@ -39,32 +37,6 @@ const queueClient = new QueueClient(
         keepAliveOptions: {enable: false},
     },
 );
-
-
-/**
- * Retreive model schema from ADT
- * @param {String} Model id at DTDL format
- * @return {Object} Map of all property as keys and expected type as values
- */
-function extractSchemaDataType(context, modelId) {
-    context.log('reading DTDL schema for type detection')
-    context.log.verbose('creating ADT client');
-    const digitalTwin = new DigitalTwinsClient(
-        process.env.DIGITAL_TWINS_URL,
-        new DefaultAzureCredential());
-    modelSchema = digitalTwin.getModel(modelId, true)
-        .catch((e) => {
-            context.log.error(`Error occured while retreving model of ${modelId}\n${e.message}`);
-            throw e;
-        });
-    propertiesDataType = {}
-    for (const c in modelSchema.contents) {
-        if (c['@type'] == 'Property') {
-            // TODO extract expected type from model and match to json type
-            // return map <name,type>
-        }
-    }
-}
 
 
 /**
