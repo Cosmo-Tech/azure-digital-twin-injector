@@ -29,25 +29,7 @@ module.exports = async function(context, jsonItem) {
   context.log.verbose(`Json item: ${jsonString}`);
   
   if ('$relationshipId' in jsonItem) {
-<<<<<<< Updated upstream
-    context.log.verbose(`upserting relationship ${jsonItem.$relationshipId}`);
-    await (async () => {
-      context.log.verbose('waiting 100ms');
-      sleep(100);
-      context.log.verbose('calling ADT relationship API');
-      await digitalTwin.upsertRelationship(
-          jsonItem.$sourceId,
-          jsonItem.$relationshipId,
-          jsonItem.relationship)
-          .catch((e) => {
-            context.log.error(`relationship ${jsonItem.$relationshipId}
-              on source ${jsonItem.$sourceId} insertion failed: `, e);
-            const err = `failed relationship: ${jsonString}`;
-            throw err;
-          });
-    })();
-=======
-    if (jsonItem.$relationshipDelete === true) { // relationship must be deleted
+    if (jsonItem.relationship.$relationshipDelete === true) { // relationship must be deleted
       context.log.verbose(`deleting relationship ${jsonItem.$relationshipId}`);
       await (async () => {
         context.log.verbose('waiting 100ms');
@@ -71,7 +53,8 @@ module.exports = async function(context, jsonItem) {
         context.log.verbose('calling ADT relationship API');
         await digitalTwin.upsertRelationship(
             jsonItem.$sourceId,
-            jsonItem.$relationshipId, jsonItem)
+            jsonItem.$relationshipId,
+            jsonItem.relationship)
             .catch((e) => {
               context.log.error(`relationship ${jsonItem.$relationshipId}
                 on source ${jsonItem.$sourceId} insertion failed: `, e);
@@ -80,7 +63,6 @@ module.exports = async function(context, jsonItem) {
             });
       })();
     }
->>>>>>> Stashed changes
   } else if ('$id' in jsonItem) {
     if (jsonItem.$entityDelete === true) { // twin must be deleted
       // list all twin relationships
