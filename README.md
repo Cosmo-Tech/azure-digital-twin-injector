@@ -42,7 +42,7 @@ The injector is triggered by uploading a CSV file to an azure storage
 container and expects the following columns for twins:
  - `$metadata.$model`: The model id of the twin;
  - `$id`: The id of the twin;
- - `$entityDelete`: If true, the twin is deleted, if false the twin is upserted;
+ - `$entityDelete`: If true, the twin is deleted with all its in & out relationships, if false the twin is upserted; Optional. Default: false
  - one column for each property or telemetry, with complex properties
    flattened with dot-spearated headers.
 for instance given the following twin model:
