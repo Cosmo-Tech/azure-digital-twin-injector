@@ -27,9 +27,10 @@ module.exports = async function(context, jsonItem) {
       new DefaultAzureCredential());
   const jsonString = JSON.stringify(jsonItem);
   context.log.verbose(`Json item: ${jsonString}`);
-  
+
   if ('$relationshipId' in jsonItem) {
-    if (jsonItem.relationship.$relationshipDelete === true) { // relationship must be deleted
+    if (jsonItem.relationship.$relationshipDelete === true) {
+      // relationship must be deleted
       context.log.verbose(`deleting relationship ${jsonItem.$relationshipId}`);
       await (async () => {
         context.log.verbose('waiting 100ms');
@@ -66,16 +67,16 @@ module.exports = async function(context, jsonItem) {
   } else if ('$id' in jsonItem) {
     if (jsonItem.$entityDelete === true) { // twin must be deleted
       // list all twin relationships
-      let rels = []
+      const rels = [];
       // outgoing relationships
-      let out = digitalTwin.listRelationships(jsonItem.$id);
+      const out = digitalTwin.listRelationships(jsonItem.$id);
       for await (const rel of out) {
-        rels.push([rel.$sourceId, rel.$relationshipId])
+        rels.push([rel.$sourceId, rel.$relationshipId]);
       }
       // incoming relationships
-      let inc = digitalTwin.listIncomingRelationships(jsonItem.$id);
+      const inc = digitalTwin.listIncomingRelationships(jsonItem.$id);
       for await (const rel of inc) {
-        rels.push([rel.sourceId, rel.relationshipId])
+        rels.push([rel.sourceId, rel.relationshipId]);
       }
       // delete all twin relationships
       for (const tbd of rels) {
