@@ -19,6 +19,26 @@ const sleep = (ms) => {
   return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
+/**
+ * Delete a relationship in a digital twin instance.
+ * @param {Object} context Context.
+ * @param {Object} twin A digital twin client.
+ * @param {String} sourceId Identifier of the relationship source in twin.
+ * @param {String} relId Identifier of the relationship in twin.
+ */
+async function deleteRel(context, twin, sourceId, relId) {
+  context.log.verbose('waiting 100ms');
+  sleep(100);
+  context.log.verbose('calling ADT relationship API');
+  await twin.deleteRelationship(sourceId, relId)
+      .catch((e) => {
+        context.log.error(`relationship ${relId}
+          on source ${sourceId} deletion failed: `, e);
+        const err = `failed relationship: ${relId}`;
+        throw err;
+      });
+}
+
 module.exports = async function(context, jsonItem) {
   context.log('doUpsert function triggered');
   context.log.verbose('creating ADT client');
@@ -32,20 +52,11 @@ module.exports = async function(context, jsonItem) {
     if (jsonItem.relationship.$relationshipDelete === true) {
       // relationship must be deleted
       context.log.verbose(`deleting relationship ${jsonItem.$relationshipId}`);
-      await (async () => {
-        context.log.verbose('waiting 100ms');
-        sleep(100);
-        context.log.verbose('calling ADT relationship API');
-        await digitalTwin.deleteRelationship(
-            jsonItem.$sourceId,
-            jsonItem.$relationshipId)
-            .catch((e) => {
-              context.log.error(`relationship ${jsonItem.$relationshipId}
-                on source ${jsonItem.$sourceId} deletion failed: `, e);
-              const err = `failed relationship: ${jsonString}`;
-              throw err;
-            });
-      })();
+      await deleteRel(
+          context,
+          digitalTwin,
+          jsonItem.$sourceId,
+          jsonItem.$relationshipId);
     } else { // relationship must be upserted
       context.log.verbose(`upserting relationship ${jsonItem.$relationshipId}`);
       await (async () => {
@@ -71,28 +82,21 @@ module.exports = async function(context, jsonItem) {
       // outgoing relationships
       const out = digitalTwin.listRelationships(jsonItem.$id);
       for await (const rel of out) {
-        rels.push([rel.$sourceId, rel.$relationshipId]);
+        rels.push({sourceId: rel.$sourceId, id: rel.$relationshipId});
       }
       // incoming relationships
       const inc = digitalTwin.listIncomingRelationships(jsonItem.$id);
       for await (const rel of inc) {
-        rels.push([rel.sourceId, rel.relationshipId]);
+        rels.push({sourceId: rel.sourceId, id: rel.relationshipId});
       }
       // delete all twin relationships
       for (const tbd of rels) {
-        context.log.verbose(`deleting relationship ${tbd[1]}`);
-        await (async () => {
-          context.log.verbose('waiting 100ms');
-          sleep(100);
-          context.log.verbose('calling ADT relationship API');
-          await digitalTwin.deleteRelationship(tbd[0], tbd[1])
-              .catch((e) => {
-                context.log.error(`relationship ${tbd[1]}
-                  on source ${tbd[0]} deletion failed: `, e);
-                const err = `failed relationship: ${jsonString}`;
-                throw err;
-              });
-        })();
+        context.log.verbose(`deleting relationship ${tbd.id}`);
+        await deleteRel(
+            context,
+            digitalTwin,
+            tbd.sourceId,
+            tbd.id);
       }
       // delete twin
       context.log.verbose(`deleting twin ${jsonItem.$id}`);
