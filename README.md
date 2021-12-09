@@ -79,9 +79,15 @@ for instance given the following twin model:
 
 You may inject twins matching this model using the following CSV file:
 
-| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position.x"` | `"position.y"` |
+| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position/x"` | `"position/y"` |
 | ----------------------------- | -------------- | ----------------- | --------- | -------------- | -------------- |
 | `dtmi:com.example:flagpole;1` | `"first_pole"` | `"false"`         | `"red"`   | `25.3`         | `42.0`         |
+
+Alternatively, the values `"position/x"` and `"position/y"` can be injected as a single nested structure:
+
+| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position"`                   |
+| ----------------------------- | -------------- | ----------------- | --------- | ------------------------------ |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"false"`         | `"red"`   | `"{""x"": 25.3, ""y"": 42.0}"` |
 
 Inserting relationships with `dt-injector` requires the following columns:
 
