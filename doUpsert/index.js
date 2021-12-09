@@ -38,6 +38,22 @@ async function deleteRel(context, twin, sourceId, relId) {
       });
 }
 
+/**
+ * Build a JSON patch object using the properties of the input item object.
+ * @param {Object} item An object describing a twin update.
+ * @return {Object} patch A JSON patch object.
+ */
+function buildPatch(item) {
+  const patch = [];
+  for (const i of Object.keys(item)) { // build the JSON patch
+    if (!i.startsWith('$')) { // remove metadata keywords
+      const path = `/${i}`;
+      patch.push({op: 'replace', path, value: item[i]});
+    }
+  }
+  return patch;
+}
+
 module.exports = async function(context, jsonItem) {
   context.log('doUpsert function triggered');
   context.log.verbose('creating ADT client');
@@ -64,15 +80,9 @@ module.exports = async function(context, jsonItem) {
             jsonItem.$sourceId, jsonItem.$relationshipId);
         context.log.verbose(
             `updating relationship ${jsonItem.$relationshipId}`);
-        const patch = [];
-        for (const i of Object.keys(jsonItem)) { // build the JSON patch
-          if (!i.startsWith('$')) { // remove metadata keywords
-            const path = `/${i}`;
-            patch.push({op: 'replace', path, value: jsonItem[i]});
-          }
-        }
+        const rlPatch = buildPatch(jsonItem);
         await digitalTwin.updateRelationship(
-            jsonItem.$sourceId, jsonItem.$relationshipId, patch);
+            jsonItem.$sourceId, jsonItem.$relationshipId, rlPatch);
       } catch (error) {
         // relationship does not exist and must be upserted
         context.log.verbose(
@@ -136,14 +146,8 @@ module.exports = async function(context, jsonItem) {
       try { // if twin already exists, it must be updated instead
         await digitalTwin.getDigitalTwin(jsonItem.$id);
         context.log.verbose(`updating twin ${jsonItem.$id}`);
-        const patch = [];
-        for (const i of Object.keys(jsonItem)) { // build the JSON patch
-          if (!i.startsWith('$')) { // remove metadata keywords
-            const path = `/${i}`;
-            patch.push({op: 'replace', path, value: jsonItem[i]});
-          }
-        }
-        await digitalTwin.updateDigitalTwin(jsonItem.$id, patch);
+        const twPatch = buildPatch(jsonItem);
+        await digitalTwin.updateDigitalTwin(jsonItem.$id, twPatch);
       } catch (error) {
         // twin does not exist and must be upserted
         context.log.verbose(`upserting twin ${jsonItem.$id}`);
