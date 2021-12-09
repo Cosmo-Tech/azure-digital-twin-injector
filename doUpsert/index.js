@@ -15,9 +15,8 @@
 
 const {DigitalTwinsClient} = require('@azure/digital-twins-core');
 const {DefaultAzureCredential} = require('@azure/identity');
-const sleep = (ms) => {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-};
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /**
  * Delete a relationship in a digital twin instance.
@@ -44,7 +43,8 @@ module.exports = async function(context, jsonItem) {
   context.log.verbose('creating ADT client');
   const digitalTwin = new DigitalTwinsClient(
       process.env.DIGITAL_TWINS_URL,
-      new DefaultAzureCredential());
+      new DefaultAzureCredential(),
+  );
   const jsonString = JSON.stringify(jsonItem);
   context.log.verbose(`Json item: ${jsonString}`);
 
@@ -56,24 +56,44 @@ module.exports = async function(context, jsonItem) {
           context,
           digitalTwin,
           jsonItem.$sourceId,
-          jsonItem.$relationshipId);
+          jsonItem.$relationshipId,
+      );
     } else { // relationship must be upserted
-      context.log.verbose(`upserting relationship ${jsonItem.$relationshipId}`);
-      await (async () => {
-        context.log.verbose('waiting 100ms');
-        sleep(100);
-        context.log.verbose('calling ADT relationship API');
-        await digitalTwin.upsertRelationship(
-            jsonItem.$sourceId,
-            jsonItem.$relationshipId,
-            jsonItem.relationship)
-            .catch((e) => {
-              context.log.error(`relationship ${jsonItem.$relationshipId}
+      try { // if relationship exists it must be updated
+        await digitalTwin.getRelationship(
+            jsonItem.$sourceId, jsonItem.$relationshipId);
+        context.log.verbose(
+            `updating relationship ${jsonItem.$relationshipId}`);
+        const patch = [];
+        for (const i of Object.keys(jsonItem)) { // build the JSON patch
+          if (!i.startsWith('$')) { // remove metadata keywords
+            const path = `/${i}`;
+            patch.push({op: 'replace', path, value: jsonItem[i]});
+          }
+        }
+        await digitalTwin.updateRelationship(
+            jsonItem.$sourceId, jsonItem.$relationshipId, patch);
+      } catch (error) {
+        // relationship does not exist and must be upserted
+        context.log.verbose(
+            `upserting relationship ${jsonItem.$relationshipId}`);
+        await (async () => {
+          context.log.verbose('waiting 100ms');
+          sleep(100);
+          context.log.verbose('calling ADT relationship API');
+          await digitalTwin.upsertRelationship(
+              jsonItem.$sourceId,
+              jsonItem.$relationshipId,
+              jsonItem.relationship,
+          )
+              .catch((e) => {
+                context.log.error(`relationship ${jsonItem.$relationshipId}
                 on source ${jsonItem.$sourceId} insertion failed: `, e);
-              const err = `failed relationship: ${jsonString}`;
-              throw err;
-            });
-      })();
+                const err = `failed relationship: ${jsonString}`;
+                throw err;
+              });
+        })();
+      }
     }
   } else if ('$id' in jsonItem) {
     if (jsonItem.$entityDelete === true) { // twin must be deleted
@@ -96,7 +116,8 @@ module.exports = async function(context, jsonItem) {
             context,
             digitalTwin,
             tbd.sourceId,
-            tbd.id);
+            tbd.id,
+        );
       }
       // delete twin
       context.log.verbose(`deleting twin ${jsonItem.$id}`);
@@ -112,19 +133,32 @@ module.exports = async function(context, jsonItem) {
             });
       })();
     } else { // twin must be upserted
-      context.log.verbose(`upserting twin ${jsonItem.$id}`);
-      // twin
-      await (async () => {
-        context.log.verbose('waiting 20ms');
-        sleep(20);
-        context.log.verbose('calling ADT twin API');
-        await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
-            .catch((e) => {
-              context.log.error(`twin ${jsonItem.$id} insertion failed: `, e);
-              const err = `failed twin: ${jsonString}`;
-              throw err;
-            });
-      })();
+      try { // if twin already exists, it must be updated instead
+        await digitalTwin.getDigitalTwin(jsonItem.$id);
+        context.log.verbose(`updating twin ${jsonItem.$id}`);
+        const patch = [];
+        for (const i of Object.keys(jsonItem)) { // build the JSON patch
+          if (!i.startsWith('$')) { // remove metadata keywords
+            const path = `/${i}`;
+            patch.push({op: 'replace', path, value: jsonItem[i]});
+          }
+        }
+        await digitalTwin.updateDigitalTwin(jsonItem.$id, patch);
+      } catch (error) {
+        // twin does not exist and must be upserted
+        context.log.verbose(`upserting twin ${jsonItem.$id}`);
+        await (async () => {
+          context.log.verbose('waiting 20ms');
+          sleep(20);
+          context.log.verbose('calling ADT twin API');
+          await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
+              .catch((e) => {
+                context.log.error(`twin ${jsonItem.$id} insertion failed: `, e);
+                const err = `failed twin: ${jsonString}`;
+                throw err;
+              });
+        })();
+      }
     }
   } else {
     context.log.error(`unrecognized message format: ${jsonString}`);
