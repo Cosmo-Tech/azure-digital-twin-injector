@@ -117,13 +117,10 @@ function twinCsvObject2DTDL(context, twinObject) {
     }
     // Add ADT model ref
 
-    if (!('$metadata.$model' in twinObject)) {
+    if (!('$metadata' in twinObject)) {
         let modelId = `dtmi:${context.bindingData.filename};${context.bindingData.version}`
         twinObject["$metadata"] = {"$model": modelId};  
-    } else {
-        twinObject["$metadata"] = {"$model": twinObject['$metadata.$model']};  
-        delete twinObject['$metadata.$model'] ;
-    }
+    }   
     // Mod id to be DTDL ref $id
     if (!('$id' in twinObject)) {
         twinObject["$id"] = twinObject["id"]

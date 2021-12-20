@@ -69,7 +69,7 @@ describe('twinCsvObject2DTDL', function() {
         expect(r['$metadata']['$model']).toEqual('dtmi:test_filename;1');
     });
     test('Transform parse twin data format with modelId to match dtdl format', function() {
-        twinObject = {'$id': 'test_id', '$metadata.$model': 'dtmi:test_dtmi;1'};
+        twinObject = {'$id': 'test_id', '$metadata':{'$model': 'dtmi:test_dtmi;1'}};
 
         r = twinCsvObject2DTDL(mockContext, twinObject);
         
