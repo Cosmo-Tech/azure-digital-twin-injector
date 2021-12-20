@@ -173,6 +173,13 @@ async function csv2json(context, csvData) {
             for (const k in results.data) {
                 if (results.data[k] === null)
                     delete results.data[k];
+                if (k.includes('.')) {
+                    headerSplit = k.split('.');
+                    if (!(headerSplit[0] in results.data))
+                        results.data[headerSplit[0]] = {};
+                    results.data[headerSplit[0]][headerSplit[1]] = results.data[k];
+                    delete results.data[k];
+                }
             }
             // Discriminate twins from relations
             // TODO: Find an other way to discriminate

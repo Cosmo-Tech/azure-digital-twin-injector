@@ -306,4 +306,18 @@ describe('csv2json', () => {
         mockMessage = mockMessages[0];
         expect(mockMessage).not.toIncludeKey('test_attribute');
     });
+    test('Test legacy format', function() {
+        csv = 'id,test.attr1,test.attr2\n'
+        +     'test_id,t1,t2';
+       
+        csv2json(mockContext, csv)
+
+        expect(mockMessages.length).toBe(1);
+        mockMessage = mockMessages[0];
+        expect(mockMessage).toIncludeKey('test');
+        expect(mockMessage['test']).toIncludeKey('attr1');
+        expect(mockMessage['test']['attr1']).toEqual('t1');
+        expect(mockMessage['test']).toIncludeKey('attr2');
+        expect(mockMessage['test']['attr2']).toEqual('t2');
+    });
 });
