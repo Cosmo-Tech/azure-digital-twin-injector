@@ -15,6 +15,7 @@
 
 const {DigitalTwinsClient} = require('@azure/digital-twins-core');
 const {DefaultAzureCredential} = require('@azure/identity');
+const {RestError} = require('@azure/storage-queue');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -43,12 +44,12 @@ async function deleteRel(context, twin, sourceId, relId) {
  * @param {Object} item An object describing a twin update.
  * @return {Object} patch A JSON patch object.
  */
-function buildPatch(item) {
+async function buildPatch(item) {
   const patch = [];
   for (const i of Object.keys(item)) { // build the JSON patch
     if (!i.startsWith('$')) { // remove metadata keywords
       const path = `/${i}`;
-      patch.push({op: 'replace', path, value: item[i]});
+      patch.push({op: 'add', path, value: item[i]});
     }
   }
   return patch;
@@ -80,29 +81,33 @@ module.exports = async function(context, jsonItem) {
             jsonItem.$sourceId, jsonItem.$relationshipId);
         context.log.verbose(
             `updating relationship ${jsonItem.$relationshipId}`);
-        const rlPatch = buildPatch(jsonItem);
+        const rlPatch = await buildPatch(jsonItem.relationship);
         await digitalTwin.updateRelationship(
             jsonItem.$sourceId, jsonItem.$relationshipId, rlPatch);
       } catch (error) {
-        // relationship does not exist and must be upserted
-        context.log.verbose(
-            `upserting relationship ${jsonItem.$relationshipId}`);
-        await (async () => {
-          context.log.verbose('waiting 100ms');
-          sleep(100);
-          context.log.verbose('calling ADT relationship API');
-          await digitalTwin.upsertRelationship(
-              jsonItem.$sourceId,
-              jsonItem.$relationshipId,
-              jsonItem.relationship,
-          )
-              .catch((e) => {
-                context.log.error(`relationship ${jsonItem.$relationshipId}
-                on source ${jsonItem.$sourceId} insertion failed: `, e);
-                const err = `failed relationship: ${jsonString}`;
-                throw err;
-              });
-        })();
+        if (error instanceof RestError) {
+          // relationship does not exist and must be upserted
+          context.log.verbose(
+              `upserting relationship ${jsonItem.$relationshipId}`);
+          await (async () => {
+            context.log.verbose('waiting 100ms');
+            sleep(100);
+            context.log.verbose('calling ADT relationship API');
+            await digitalTwin.upsertRelationship(
+                jsonItem.$sourceId,
+                jsonItem.$relationshipId,
+                jsonItem.relationship,
+            )
+                .catch((e) => {
+                  context.log.error(`relationship ${jsonItem.$relationshipId}
+                  on source ${jsonItem.$sourceId} insertion failed: `, e);
+                  const err = `failed relationship: ${jsonString}`;
+                  throw err;
+                });
+          })();
+        } else {
+          throw error;
+        }
       }
     }
   } else if ('$id' in jsonItem) {
@@ -146,22 +151,27 @@ module.exports = async function(context, jsonItem) {
       try { // if twin already exists, it must be updated instead
         await digitalTwin.getDigitalTwin(jsonItem.$id);
         context.log.verbose(`updating twin ${jsonItem.$id}`);
-        const twPatch = buildPatch(jsonItem);
+        const twPatch = await buildPatch(jsonItem);
         await digitalTwin.updateDigitalTwin(jsonItem.$id, twPatch);
       } catch (error) {
-        // twin does not exist and must be upserted
-        context.log.verbose(`upserting twin ${jsonItem.$id}`);
-        await (async () => {
-          context.log.verbose('waiting 20ms');
-          sleep(20);
-          context.log.verbose('calling ADT twin API');
-          await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
-              .catch((e) => {
-                context.log.error(`twin ${jsonItem.$id} insertion failed: `, e);
-                const err = `failed twin: ${jsonString}`;
-                throw err;
-              });
-        })();
+        if (error instanceof RestError) {
+          // twin does not exist and must be upserted
+          context.log.verbose(`upserting twin ${jsonItem.$id}`);
+          await (async () => {
+            context.log.verbose('waiting 20ms');
+            sleep(20);
+            context.log.verbose('calling ADT twin API');
+            await digitalTwin.upsertDigitalTwin(jsonItem.$id, jsonString)
+                .catch((e) => {
+                  context.log.error(
+                      `twin ${jsonItem.$id} insertion failed: `, e);
+                  const err = `failed twin: ${jsonString}`;
+                  throw err;
+                });
+          })();
+        } else {
+          throw error;
+        }
       }
     }
   } else {
