@@ -15,7 +15,7 @@
 
 const {DigitalTwinsClient} = require('@azure/digital-twins-core');
 const {DefaultAzureCredential} = require('@azure/identity');
-const {RestError} = require('@azure/storage-queue');
+const {RestError} = require('@azure/core-http');
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
