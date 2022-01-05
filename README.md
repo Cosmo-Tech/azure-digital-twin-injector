@@ -106,9 +106,9 @@ updates:
 You may inject twins following the example model above using the following CSV
 file:
 
-| `"$metadata.$model"`          | `"$id"`        | `"color"` | `"position"`                   |
-| ----------------------------- | -------------- | --------- | ------------------------------ |
-| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   | `"{""x"": 25.3, ""y"": 42.0}"` |
+| `"$metadata.$model"`          | `"$id"`        | `"color"` |
+| ----------------------------- | -------------- | --------- |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   |
 
 ### Example 2 - Adding a complex property to the twin
 
