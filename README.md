@@ -38,14 +38,12 @@ frontends for csv2json (respectively blob triggered and http triggered).
 
 # CSV input format
 
-The injector is triggered by uploading a CSV file to an azure storage
-container and expects the following columns for twins:
- - `$metadata.$model`: The model id of the twin;
- - `$id`: The id of the twin;
- - `$entityDelete`: If true, the twin is deleted with all its in & out relationships, if false the twin is upserted; Optional. Default: false
- - one column for each property or telemetry, with complex properties
-   flattened with dot-spearated headers.
-for instance given the following twin model:
+The injector is triggered by uploading a CSV file to an Azure storage
+container. CSV files must comply with the following naming convention:
+`<filename>.v<version_number>.csv` (for instance: `my_twins.v2.csv`).
+
+In order to illustrate file syntax we consider the following example twin
+model:
 ```json
 {
     "@id": "dtmi:com.example:flagpole;1",
@@ -72,36 +70,121 @@ for instance given the following twin model:
                     }
                 ]
             }
+        },
+        {
+            "@type": "Relationship",
+            "name": "neighbor",
+            "target": "dtmi:com.example:flagpole;1",
+            "properties": [
+                {
+                    "type": "Property",
+                    "name": "distance",
+                    "schema": "double"
+                }
+            ]
         }
     ]
 }
 ```
 
-You may inject twins matching this model using the following CSV file:
+## Twin upsert file syntax
 
-| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position"`                   |
-| ----------------------------- | -------------- | ----------------- | --------- | ------------------------------ |
-| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"false"`         | `"red"`   | `"{""x"": 25.3, ""y"": 42.0}"` |
+The following columns are **mandatory** in files describing twin insertions or
+updates:
+- `$metadata.$model`: model identifier of the twin;
+- `$id`: identifier of the twin.
 
-Alternatively, the values `"position/x"` and `"position/y"` can be injected
-individually using their complete path as a column name:
+The following columns are **optional** in files describing twin insertions or
+updates:
+- `$entityDelete`: if true, the twin is deleted with all its inbound and
+  outbound relationships. If false the twin is upserted. Default: false.
+- One column for each property or telemetry, with complex properties
+  flattened with `.` or `/` separated headers (see below).
 
-| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` | `"color"` | `"position/x"` | `"position/y"` |
-| ----------------------------- | -------------- | ----------------- | --------- | -------------- | -------------- |
-| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"false"`         | `"red"`   | `25.3`         | `42.0`         |
+### Example 1 - Inserting a twin with a simple property
 
-Note: this alternative syntax **does not work if target property is empty**.
-For instance, the example above will fail if the property `"position"` is
-empty.
+You may inject twins following the example model above using the following CSV
+file:
 
-Inserting relationships with `dt-injector` requires the following columns:
+| `"$metadata.$model"`          | `"$id"`        | `"color"` | `"position"`                   |
+| ----------------------------- | -------------- | --------- | ------------------------------ |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"red"`   | `"{""x"": 25.3, ""y"": 42.0}"` |
 
-| `"$sourceId"` | `"$targetId"` | `"$relationshipId"` | `"$relationshipName"` | `"$relationshipDelete"` | `"property1"` | `"property..."` |
-| ------------- | ------------- | ------------------- | --------------------- | ----------------------- | ------------- | --------------- |
+### Example 2 - Adding a complex property to the twin
+
+In example 1 no `position` property was created; it can be added using the
+following CSV file:
+
+| `"$metadata.$model"`          | `"$id"`        | `"position"`                   |
+| ----------------------------- | -------------- | ------------------------------ |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"{""x"": 25.3, ""y"": 42.0}"` |
+
+Note that the value of the `color` property will not change: since the
+`first_pole` twin already exists, the line is interpreted as an update query.
+
+Alternatively, the following syntax could have been used with the same result:
+
+| `"$metadata.$model"`          | `"$id"`        | `"position.x"` | `"position.y"` |
+| ----------------------------- | -------------- | -------------- | -------------- |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `25.3`         | `42.0`         |
+
+### Example 3 - Updating a complex property of a twin
+
+Syntax described in example 2 cannot be used to change a single value of a
+complex property. To do so, you need to express the complete path of the value
+to be changed using `/` (instead of a `.`) as a separator in the column name:
+
+| `"$metadata.$model"`          | `"$id"`        | `"position/x"` |
+| ----------------------------- | -------------- | -------------- |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `44.9`         |
+
+This example updates the value of `position.x` without changing the value of
+`position.y`.
+
+Note: this syntax **does not work if target property does not exist** in target
+twin. The property needs to exist (and can be created using the syntax
+described in example 2).
+
+### Example 4 - Deleting a twin
+
+| `"$metadata.$model"`          | `"$id"`        | `"$entityDelete"` |
+| ----------------------------- | -------------- | ----------------- |
+| `dtmi:com.example:flagpole;1` | `"first_pole"` | `"true"`          |
+
+Note: additional properties on a line where the property `$entityDelete` is
+`true` are ignored.
+
+## Relationship upsert file syntax
+
+The following columns are **mandatory** in files describing relationship
+insertions or updates:
+- `$sourceId`: identifier of the source twin of the relationship;
+- `$targetId`: identifier of the target twin of the relationship.
+
+The following columns are **optional** in files describing twin insertions or
+updates:
+- `$relationshipId`: identifier of the relationship. If no `$relationshipId`
+  value is provided, an identifier is created by concatenation:
+  `<$sourceId>-<$targetId>`.
+- `$relationshipName`: name of the relationship. If no `$relationshipName`
+  value is provided, the CSV file name is used instead.
+- `$relationshipDelete`: if true, the relationship is deleted. If false it is
+  upserted. Default: false.
+- One column for each property or telemetry, with complex properties
+  flattened with `.` separated headers (for insertions) or `/` separated
+  headers (for updates).
+
+Relationship insertion or update follows the same rules than twins. For
+instance, inserting a new relationship with a simple property value can be
+achieved with the following CSV file structure:
+
+| `"$sourceId"`  | `"$targetId"`   | `"$relationshipId"` | `"distance"` |
+| -------------- | --------------- | ------------------- | ------------ |
+| `"first_pole"` | `"second_pole"` | `"pole_1-2"`        | `53.0`       |
 
 # Configuration
 
-dt-injector can be configured using the following settings:
+`dt-injector` can be configured using the following settings:
 
 | **Application settings**       |                                                                                                     |
 | ------------------------------ | --------------------------------------------------------------------------------------------------- |
