@@ -48,7 +48,8 @@
             "kind": "StorageV2",
             "properties": {
                 "minimumTlsVersion": "TLS1_2",
-                "allowBlobPublicAccess": true,
+                "allowBlobPublicAccess": false,
+                "supportsHttpsTrafficOnly": true,
                 "accessTier": "Hot"
             },
             "resources": [
@@ -103,7 +104,9 @@
                 "type": "SystemAssigned"
             },
             "properties": {
+                "httpsOnly": true,
                 "siteConfig": {
+                    "minTlsVersion": "1.2",
                     "functionAppScaleLimit": 1,
                     "appSettings": [
                         {
